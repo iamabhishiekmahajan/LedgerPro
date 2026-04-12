@@ -3,662 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LedgerPro - Smart Cloud Khata</title>
+    <title>LedgerPro</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-        
-        :root {
-            --bg: #0a0a0f;
-            --surface: #13131a;
-            --surface2: #1c1c28;
-            --border: #2a2a3a;
-            --accent: #f0c040;
-            --red: #ff4d4d;
-            --green: #00e676;
-            --text: #e8e8f0;
-            --muted: #8080a0;
-            --font: 'Inter', sans-serif;
-            --mono: 'JetBrains Mono', monospace;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding-bottom: 50px; }
-
-        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; }
-        .nav-logo { font-size: 1rem; font-weight: 800; letter-spacing: -0.5px; }
-        .nav-logo span { color: var(--accent); }
+        :root { --bg: #0a0a0f; --surf: #13131a; --bord: #2a2a3a; --acc: #f0c040; --red: #ff4d4d; --grn: #00e676; --txt: #e8e8f0; --mut: #8080a0; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--txt); padding-bottom: 60px; font-size: 14px; overflow-x: hidden; }
+        .nav { position: sticky; top: 0; z-index: 99; background: rgba(10,10,15,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--bord); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; gap: 5px; }
-        .nav-tab { padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; border: none; background: transparent; color: var(--muted); }
-        .nav-tab.active { background: var(--accent); color: #000; }
-
-        .mini-stats { padding: 12px 15px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 20px; font-size: 0.65rem; font-weight: 600; margin-bottom: 15px; border-radius: 0 0 15px 15px;}
-        .mini-stat-item { display: flex; flex-direction: column; }
-        .mini-stat-val { font-family: var(--mono); color: var(--text); font-size: 0.9rem; }
-
-        .section { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
+        .tab { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border:none; background:transparent; color: var(--mut); cursor: pointer; }
+        .tab.active { background: var(--acc); color: #000; }
+        .section { display: none; padding: 12px; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.85rem;}
-        .type-btn.bill { background: rgba(255, 77, 77, 0.1); color: var(--red); border-color: var(--red); }
-        .type-btn.pay { background: rgba(0, 230, 118, 0.1); color: var(--green); border-color: var(--green); }
-        .type-btn.active.bill { background: var(--red); color: white; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
-        .type-btn.active.pay { background: var(--green); color: white; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3); }
-
-        #entry-form { animation: fadeIn 0.3s ease; background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;}
-
-        .form-group { margin-bottom: 12px; position: relative; }
-        label { display: block; font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; font-weight: 700; }
-        input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-family: var(--font); font-size: 0.95rem; outline: none; transition: border 0.2s; }
-        input:focus { border-color: var(--accent); }
-        
-        .autocomplete { position: absolute; width: 100%; background: var(--surface2); border: 1px solid var(--accent); border-radius: 8px; z-index: 10; top: 100%; margin-top: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); max-height: 200px; overflow-y: auto; }
-        .auto-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; }
-
-        .btn-submit { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-weight: 800; font-size: 0.95rem; margin-top: 5px; cursor: pointer; }
-        .btn-wa-bulk { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--green); background: transparent; color: var(--green); font-weight: 700; font-size: 0.8rem; margin-top: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-        .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
-        .cust-head { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .cust-name { font-weight: 700; font-size: 0.95rem; }
-        .cust-bal { font-family: var(--mono); font-weight: 700; font-size: 0.9rem; }
-        
-        .txn-history { border-top: 1px solid var(--border); padding: 12px; display: none; background: rgba(0,0,0,0.15); }
-        .txn-history.open { display: block; }
-        .txn-item { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 10px 5px; border-bottom: 1px dashed var(--border); }
-        .txn-item:last-child { border-bottom: none; }
-        
-        .copy-btns { display: flex; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-        .btn-copy { flex: 1; padding: 8px 5px; font-size: 0.65rem; font-weight: 700; background: var(--surface2); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
-        
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .metric-card { background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-        .metric-val { font-size: 1.1rem; font-weight: 800; color: var(--accent); display: block; font-family: var(--mono); }
-        .metric-label { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
-
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; z-index: 1000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-        .sync-status { font-size: 0.6rem; margin-top: 10px; text-align: center; color: var(--muted); }
-        
-        .loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--surface2); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; padding: 12px; margin-bottom: 12px; position: relative; }
+        .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .t-btn { padding: 10px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf); color: var(--mut); font-weight: 700; font-size: 12px; }
+        .t-btn.active.r { background: var(--red); color: #fff; }
+        .t-btn.active.g { background: var(--grn); color: #fff; }
+        input { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 8px; padding: 10px; color: #fff; margin-bottom: 10px; font-size: 14px; outline: none; }
+        .plus-btn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--bord); font-weight: 800; cursor: pointer; margin-left: 10px; font-size: 16px; }
+        .btn-sub { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 800; margin-top: 5px; cursor: pointer; }
+        .txn-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a2a3a55; }
+        .copy-btns { display: flex; gap: 4px; margin-top: 8px; }
+        .c-btn { font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--bord); background: #1c1c28; color: var(--acc); font-weight: 700; }
+        .edit-ic { color: var(--mut); padding: 5px; cursor: pointer; font-size: 12px; }
+        .history-pane { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--bord); display: none; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-c { background: var(--surf); padding: 20px; border-radius: 15px; width: 100%; max-width: 320px; border: 1px solid var(--bord); }
+        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 999; display: none; }
+        .autocomplete { position: absolute; background: #1c1c28; border: 1px solid var(--acc); width: calc(100% - 24px); z-index: 100; border-radius: 8px; max-height: 150px; overflow-y: auto; }
+        .auto-item { padding: 10px; border-bottom: 1px solid var(--bord); }
     </style>
 </head>
-<body>
+<body onclick="closeAllPanes(event)">
+<div id="loader" style="position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;">Syncing...</div>
+<nav class="nav"><div style="font-weight:800">Ledger<span style="color:var(--acc)">Pro</span></div><div class="nav-tabs"><button class="tab active" onclick="tab('home',this)">HOME</button><button class="tab" onclick="tab('books',this)">BOOKS</button></div></nav>
+<div id="toast" class="toast"></div>
 
-<div id="loader" class="loading-overlay">
-    <div class="spinner"></div>
-    <div style="font-weight: 800; letter-spacing: 2px;">LEDGER<span style="color:var(--accent)">PRO</span></div>
-    <div style="font-size: 0.6rem; color: var(--muted); margin-top: 10px;">PULLING CLOUD DATA...</div>
-</div>
-
-<nav class="nav">
-    <div class="nav-logo">Ledger<span>Pro</span></div>
-    <div class="nav-tabs">
-        <button class="nav-tab active" onclick="tab('entry', this)">Home</button>
-        <button class="nav-tab" onclick="tab('books', this)">Books</button>
-        <button class="nav-tab" onclick="tab('metrics', this)">Metrics</button>
-    </div>
-</nav>
-
-<div class="section active" id="sec-entry">
+<!-- Home -->
+<div id="sec-home" class="section active">
     <div class="type-toggle">
-        <button class="type-btn bill" id="type-bill" onclick="setType('bill')">SALE (+)</button>
-        <button class="type-btn pay" id="type-pay" onclick="setType('pay')">PAYMENT (-)</button>
+        <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
+        <button class="t-btn" id="bg" onclick="setT('pay')">PAY (-)</button>
     </div>
-
-    <!-- Hidden initially, opens when type is selected -->
-    <div id="entry-form" style="display: none;">
-        <div class="form-group">
-            <label>Customer Name</label>
-            <input type="text" id="inpName" placeholder="Enter name" oninput="handleNameInput()">
-            <div id="autoContainer" class="autocomplete" style="display:none"></div>
+    <div id="form" class="card" style="display:none">
+        <div style="display:flex;align-items:center;margin-bottom:10px;">
+            <div style="flex:1"><input id="iN" placeholder="Name" oninput="autoC()" style="margin:0"></div>
+            <div id="pBtn" class="plus-btn" onclick="tglR()">+</div>
         </div>
-
-        <!-- Hidden by default, shown only if customer is new -->
-        <div class="form-group" id="fg-phone" style="display:none;">
-            <label>WhatsApp Number (New Client)</label>
-            <input type="tel" id="inpPhone" placeholder="91XXXXXXXXXX">
-        </div>
-
-        <div class="form-group">
-            <label>Amount (₹)</label>
-            <input type="number" id="inpAmount" placeholder="0.00" inputmode="decimal">
-        </div>
-
-        <div class="form-group" style="text-align: right; margin-bottom: 5px;">
-            <button onclick="toggleRemark()" style="background:none; border:none; color:var(--accent); font-weight:700; font-size:0.7rem; cursor:pointer;">+ ADD REMARK</button>
-        </div>
-
-        <div class="form-group" id="fg-remark" style="display:none;">
-            <label>Remarks / Details</label>
-            <input type="text" id="inpRemark" placeholder="e.g. Item names or Ref no.">
-        </div>
-
-        <button class="btn-submit" onclick="submitEntry()">SAVE & SYNC</button>
-        <div class="sync-status" id="syncStatus">Cloud Bridge Active</div>
+        <div id="auto" class="autocomplete" style="display:none"></div>
+        <input id="iA" type="number" placeholder="Amount" inputmode="decimal">
+        <input id="iR" placeholder="Remarks" style="display:none">
+        <button id="sBtn" class="btn-sub" onclick="sub()">ADD</button>
     </div>
-
-    <!-- Today's Transactions shown below the buttons -->
-    <div style="margin-top: 25px;">
-        <h3 style="font-size:0.7rem; margin-bottom:12px; color:var(--muted); text-transform:uppercase; letter-spacing: 0.5px;">Today's Transactions</h3>
-        <div id="todayTxnsList"></div>
-    </div>
+    <div id="list"></div>
 </div>
 
-<div class="section" id="sec-books" style="padding-top: 0;">
-    <!-- Stats moved here -->
-    <div class="mini-stats">
-        <div class="mini-stat-item">
-            <span class="mini-stat-val" id="topClients">0</span>
-            <label>Clients</label>
-        </div>
-        <div class="mini-stat-item">
-            <span class="mini-stat-val" style="color:var(--red)" id="topDue">₹0</span>
-            <label>Total Due</label>
-        </div>
+<!-- Books -->
+<div id="sec-books" class="section">
+    <div class="card" style="display:flex;gap:10px;text-align:center">
+        <div style="flex:1"><small>DUE</small><div id="tD" style="color:var(--red);font-weight:800">0</div></div>
+        <div style="flex:1"><small>CLIENTS</small><div id="tC" style="font-weight:800">0</div></div>
     </div>
-
-    <input type="text" placeholder="🔍 Search customers..." class="form-group" style="width:100%; background:var(--surface2); border-radius:10px; padding:12px; color:white; border:1px solid var(--border);" oninput="renderBooks(this.value)">
-    <div id="booksList"></div>
+    <input placeholder="Search..." oninput="drawB(this.value)">
+    <div id="bList"></div>
 </div>
-
-<div class="section" id="sec-metrics">
-    <div class="metric-grid">
-        <div class="metric-card"><span class="metric-val" id="m-avg">₹0</span><span class="metric-label">Avg Sale/Bill</span></div>
-        <div class="metric-card"><span class="metric-val" id="m-turnover">₹0</span><span class="metric-label">Total Sale</span></div>
-        <div class="metric-card"><span class="metric-val" id="m-rec">0%</span><span class="metric-label">Payment Recovery</span></div>
-        <div class="metric-card"><span class="metric-val" id="m-new">0</span><span class="metric-label">New Cust (30d)</span></div>
-    </div>
-    
-    <button class="btn-wa-bulk" onclick="bulkWhatsApp()">
-        <span>🚀</span> SEND ALL WEEKLY REPORTS
-    </button>
-    <p style="font-size: 0.55rem; color: var(--muted); text-align: center; margin-top: 8px;">Opens WhatsApp for every customer with Mon-Sun summary.</p>
-
-    <div style="background:var(--surface); padding:15px; border-radius:12px; border:1px solid var(--border); margin-top: 20px;">
-        <h3 style="font-size:0.75rem; margin-bottom:12px; color:var(--accent); text-transform:uppercase;">Top 5 Growth Partners</h3>
-        <div id="topListCont"></div>
-    </div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <!-- Edit Modal -->
-<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:var(--surface); padding:20px; border-radius:15px; width:90%; max-width:350px; border:1px solid var(--border);">
-        <h3 style="margin-bottom:15px; color:var(--accent);">Edit Transaction</h3>
-        <div class="form-group">
-            <label>Amount (₹)</label>
-            <input type="number" id="editAmt" inputmode="decimal">
-        </div>
-        <div class="form-group">
-            <label>Remarks / Details</label>
-            <input type="text" id="editRem">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="closeEditModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:white; font-weight:bold; cursor:pointer;">Cancel</button>
-            <button onclick="saveEditTxn()" style="flex:1; padding:12px; border-radius:8px; border:none; background:var(--accent); color:black; font-weight:bold; cursor:pointer;">Save</button>
-        </div>
+<div id="modal"><div class="modal-c">
+    <h4 style="margin-bottom:15px;color:var(--acc)">Edit Transaction</h4>
+    <input id="eA" type="number" placeholder="Amount">
+    <input id="eR" placeholder="Remarks">
+    <div style="display:flex;gap:10px">
+        <button onclick="closeM()" style="flex:1;padding:10px;border-radius:8px;background:var(--bord);color:#fff;border:none">Cancel</button>
+        <button onclick="saveE()" style="flex:1;padding:10px;border-radius:8px;background:var(--acc);color:#000;border:none;font-weight:700">Save</button>
     </div>
-</div>
+</div></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyggi16DisgBGx7WTW-a5ELGbPShoybgY9q7rD44zXUCC2B82RVcVMxI2YAo15rE-J5/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNacQk_xa6ImnNCkcXjRmC_U8i5yYNMIn7rqyvJHHJmdWBR5TbvFXR1mjXGx9PFFp7/exec";
+let db = JSON.parse(localStorage.getItem('lp_d') || '{"c":{},"t":[]}'), curT = '', editId = null;
 
-    let customers = JSON.parse(localStorage.getItem('lp_customers') || '{}');
-    let txns = JSON.parse(localStorage.getItem('lp_txns') || '[]');
-    let currentType = ''; 
-    let editingTxnId = null;
+// FIXED: Using India Standard Time (IST) instead of UTC
+const getD = () => {
+    const now = new Date();
+    // Offset for IST (UTC + 5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + istOffset);
+    return istTime.toISOString().split('T')[0];
+};
 
-    function getCleanUrl() {
-        return SCRIPT_URL.trim().replace(/\/+$/, '');
-    }
+const saveL = () => localStorage.setItem('lp_d', JSON.stringify(db));
 
-    // Helper to get consistent local date
-    function getToday() {
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    }
+async function init() { drawR(); await pull(); document.getElementById('loader').style.display='none'; }
 
-    async function init() {
-        updateGlobalStats();
-        renderTodayTxns();
-        
-        setTimeout(() => {
-            const l = document.getElementById('loader');
-            if(l) l.style.display = 'none';
-        }, 8000);
-        
-        await pullFromCloud();
-        
-        document.getElementById('loader').style.display = 'none';
-    }
+async function pull() {
+    return new Promise(res => {
+        const c = 'cb'+Date.now();
+        window[c] = (d) => { 
+            if(d.txns){ 
+                // Normalize dates from cloud to ensure they don't have time components
+                db.t = d.txns.map(t => ({...t, date: String(t.date).split('T')[0]}));
+                db.c = d.customers;
+                saveL(); drawR(); updateS(); 
+            } 
+            res(); 
+        };
+        const s = document.createElement('script'); s.src=`${SCRIPT_URL}?action=getData&callback=${c}`; document.body.appendChild(s);
+    });
+}
 
-    async function pullFromCloud() {
-        if(!SCRIPT_URL || SCRIPT_URL.length < 10) return;
-        const cleanUrl = getCleanUrl();
-        return new Promise((resolve) => {
-            const callbackName = 'lp_callback_' + Math.floor(Math.random() * 1000000);
-            const url = `${cleanUrl}?action=getData&callback=${callbackName}&t=${Date.now()}`;
-            
-            window[callbackName] = function(data) {
-                if (data && data.customers) processCloudData(data);
-                cleanup();
-                resolve();
-            };
+function tab(n,b) {
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('sec-'+n).classList.add('active'); b.classList.add('active');
+    if(n==='books') drawB();
+}
 
-            const script = document.createElement('script');
-            script.src = url;
-            script.id = 'jsonp-script-' + callbackName;
-            
-            script.onerror = () => {
-                showToast("Cloud connection weak", true);
-                cleanup();
-                resolve();
-            };
+function setT(t) {
+    curT = t;
+    document.getElementById('br').className = t==='bill' ? 't-btn active r' : 't-btn';
+    document.getElementById('bg').className = t==='pay' ? 't-btn active g' : 't-btn';
+    const p = document.getElementById('pBtn');
+    p.style.color = p.style.borderColor = t==='bill' ? 'var(--red)' : 'var(--grn)';
+    document.getElementById('form').style.display = 'block';
+    const s = document.getElementById('sBtn');
+    s.style.background = t==='bill' ? 'var(--red)' : 'var(--grn)';
+    s.innerText = t==='bill' ? 'ADD BILL (+)' : 'ADD PAYMENT (-)';
+}
 
-            function cleanup() {
-                const s = document.getElementById('jsonp-script-' + callbackName);
-                if (s) s.parentNode.removeChild(s);
-                delete window[callbackName];
-            }
+function tglR() { const r = document.getElementById('iR'); r.style.display = r.style.display==='none'?'block':'none'; }
 
-            document.body.appendChild(script);
-            setTimeout(() => { if (window[callbackName]) { cleanup(); resolve(); } }, 7500);
-        });
-    }
+function autoC() {
+    const v = document.getElementById('iN').value.toLowerCase(), a = document.getElementById('auto');
+    if(!v){ a.style.display='none'; return; }
+    const m = Object.keys(db.c).filter(n => n.toLowerCase().includes(v));
+    a.innerHTML = m.map(n => `<div class="auto-item" onclick="sel('${n}')">${n}</div>`).join('');
+    a.style.display = m.length ? 'block' : 'none';
+}
+function sel(n) { document.getElementById('iN').value=n; document.getElementById('auto').style.display='none'; }
 
-    function processCloudData(data) {
-        if (data && data.customers && data.txns) {
-            customers = data.customers;
-            txns = data.txns;
-            saveLocal();
-            updateGlobalStats();
-            renderTodayTxns();
-            if(document.getElementById('sec-books').classList.contains('active')) renderBooks();
-            showToast("Cloud Data Synced");
-        }
-    }
+async function sub() {
+    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
+    if(!n || !a) return;
+    const tx = { id:Date.now(), name:n, amount:a, date:d, type:curT, remarks:r };
+    db.t.push(tx); if(!db.c[n]) db.c[n] = { joined:d };
+    saveL(); drawR(); updateS();
+    document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
+    msg("Saved");
+    fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', body:JSON.stringify({action:'addTxn', txn:tx, customer:{name:n, ...db.c[n]}})});
+}
 
-    function tab(name, btn) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('sec-'+name).classList.add('active');
-        btn.classList.add('active');
-        if(name === 'books') renderBooks();
-        if(name === 'metrics') renderMetrics();
-    }
-
-    function setType(t) {
-        currentType = t;
-        document.getElementById('type-bill').classList.toggle('active', t === 'bill');
-        document.getElementById('type-pay').classList.toggle('active', t === 'pay');
-        document.getElementById('entry-form').style.display = 'block';
-    }
-
-    function toggleRemark() {
-        const el = document.getElementById('fg-remark');
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
-        if(el.style.display === 'block') document.getElementById('inpRemark').focus();
-    }
-
-    function handleNameInput() {
-        const val = document.getElementById('inpName').value.trim();
-        const auto = document.getElementById('autoContainer');
-        const phoneGrp = document.getElementById('fg-phone');
-        
-        if(val.length < 1) { 
-            auto.style.display = 'none'; 
-            phoneGrp.style.display = 'none';
-            return; 
-        }
-
-        // Exact match check (case-insensitive) to hide phone field for existing clients
-        const exactMatch = Object.keys(customers).find(k => k.toLowerCase() === val.toLowerCase());
-        
-        if(exactMatch) {
-            phoneGrp.style.display = 'none';
-        } else if (val.length >= 3) {
-            phoneGrp.style.display = 'block'; // Show phone field for new client
-        } else {
-            phoneGrp.style.display = 'none';
-        }
-
-        const matches = Object.keys(customers).filter(n => n.toLowerCase().includes(val.toLowerCase()) && n.toLowerCase() !== val.toLowerCase()).sort();
-        if(matches.length > 0) {
-            auto.innerHTML = matches.map(m => `<div class="auto-item" onclick="selectName('${m.replace(/'/g, "\\'")}')">${m}</div>`).join('');
-            auto.style.display = 'block';
-        } else {
-            auto.style.display = 'none';
-        }
-    }
-
-    function selectName(n) {
-        document.getElementById('inpName').value = n;
-        document.getElementById('inpPhone').value = customers[n].phone || '';
-        document.getElementById('autoContainer').style.display = 'none';
-        document.getElementById('fg-phone').style.display = 'none'; // Hide phone since they exist
-    }
-
-    async function submitEntry() {
-        if(!currentType) return showToast("Please select SALE or PAYMENT first", true);
-
-        const name = document.getElementById('inpName').value.trim();
-        const amount = parseFloat(document.getElementById('inpAmount').value);
-        const remark = document.getElementById('inpRemark').value.trim();
-        const phone = document.getElementById('inpPhone').value.trim();
-        const date = getToday(); // Auto grab today's date
-
-        if(name.length < 3) return showToast("Name min 3 letters", true);
-        if(!amount || amount <= 0) return showToast("Enter valid amount", true);
-
-        const isNew = !customers[name];
-        if(isNew && phone.length < 10) return showToast("Valid WhatsApp no. required for new client", true);
-
-        customers[name] = { phone: isNew ? phone : (customers[name].phone || ''), joined: isNew ? date : (customers[name].joined || date) };
-
-        const newTxn = { id: Date.now(), name, amount, date, type: currentType, remarks: remark };
-        txns.push(newTxn);
-
-        saveLocal();
-        updateGlobalStats();
-        renderTodayTxns();
-        
-        // Clear Form fields & Reset
-        document.getElementById('inpName').value = '';
-        document.getElementById('inpAmount').value = '';
-        document.getElementById('inpPhone').value = '';
-        document.getElementById('inpRemark').value = '';
-        document.getElementById('fg-phone').style.display = 'none';
-        document.getElementById('fg-remark').style.display = 'none';
-        document.getElementById('entry-form').style.display = 'none';
-        document.getElementById('type-bill').classList.remove('active');
-        document.getElementById('type-pay').classList.remove('active');
-        currentType = '';
-
-        showToast("Entry Saved Locally");
-        await syncToCloud(newTxn, { name, ...customers[name] });
-    }
-
-    function renderTodayTxns() {
-        const todayStr = getToday();
-        const todays = txns.filter(t => t.date && String(t.date).substring(0, 10) === todayStr).reverse(); // Latest first
-        const list = document.getElementById('todayTxnsList');
-        
-        if(todays.length === 0) {
-            list.innerHTML = '<div style="color:var(--muted); font-size:0.8rem; text-align:center; padding: 20px; background:var(--surface); border-radius:12px;">No transactions today.</div>';
-            return;
-        }
-
-        list.innerHTML = todays.map(t => `
-            <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-weight:700; font-size:0.9rem;">${t.name}</div>
-                    <div style="color:var(--muted); font-size:0.7rem; margin-top:2px;">
-                        <span style="color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}; font-weight:bold;">${t.type === 'bill' ? 'SALE' : 'PAY'}</span>
-                        ${t.remarks ? ` • ${t.remarks}` : ''}
-                    </div>
-                </div>
-                <div style="font-family:var(--mono); font-weight:700; color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}">
-                    ₹${t.amount}
-                </div>
+function drawR() {
+    const l = document.getElementById('list'), s = [...db.t].sort((a,b)=>b.id-a.id).slice(0,30);
+    l.innerHTML = s.map(t => {
+        const cleanDate = String(t.date).split('T')[0].split('-').reverse().join('/');
+        return `<div class="txn-item">
+            <div style="flex:1"><b>${t.name}</b><br><small>${cleanDate} ${t.remarks?'• '+t.remarks:''}</small></div>
+            <div style="display:flex;align-items:center;gap:12px">
+                <b style="color:${t.type==='bill'?'var(--red)':'var(--grn)'}">₹${t.amount}</b>
+                <span class="edit-ic" onclick="editT(${t.id})">✎</span>
             </div>
-        `).join('');
-    }
+        </div>`
+    }).join('');
+}
 
-    function editTxn(id) {
-        const txn = txns.find(t => String(t.id) === String(id));
-        if(!txn) return;
-        
-        editingTxnId = id;
-        document.getElementById('editAmt').value = txn.amount;
-        document.getElementById('editRem').value = txn.remarks || '';
-        document.getElementById('editModal').style.display = 'flex';
-    }
+function drawB(q='') {
+    const l = document.getElementById('bList');
+    const data = Object.keys(db.c).map(n => {
+        const b = db.t.filter(t=>t.name===n).reduce((s,t)=>s+(t.type==='bill'?t.amount:-t.amount), 0);
+        return { n, b };
+    }).filter(x => x.n.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.b - a.b);
 
-    function closeEditModal() {
-        document.getElementById('editModal').style.display = 'none';
-        editingTxnId = null;
-    }
+    l.innerHTML = data.map(x => `
+        <div class="card" onclick="toggleH(event, '${x.n}')">
+            <div style="display:flex;justify-content:space-between"><b>${x.n}</b><b style="color:${x.b>0?'var(--red)':'var(--grn)'}">₹${x.b}</b></div>
+            <div class="copy-btns">
+                <button class="c-btn" onclick="copy(event, '${x.n}', 7, 'Week')">W</button>
+                <button class="c-btn" onclick="copy(event, '${x.n}', 30, 'Month')">M</button>
+                <button class="c-btn" onclick="copy(event, '${x.n}', 90, 'Quarter')">Q</button>
+            </div>
+            <div id="h-${x.n.replace(/\s/g,'_')}" class="history-pane"></div>
+        </div>`).join('');
+}
 
-    function saveEditTxn() {
-        if(!editingTxnId) return;
-        const txn = txns.find(t => String(t.id) === String(editingTxnId));
-        if(!txn) return closeEditModal();
-
-        const newAmt = parseFloat(document.getElementById('editAmt').value);
-        if(isNaN(newAmt) || newAmt <= 0) return showToast("Invalid amount", true);
-
-        txn.amount = newAmt;
-        txn.remarks = document.getElementById('editRem').value.trim();
-
-        saveLocal();
-        updateGlobalStats();
-        renderBooks(document.querySelector('#sec-books input').value); 
-        renderTodayTxns();
-        showToast("Transaction updated");
-        
-        // Sync the edited transaction back to the cloud
-        syncToCloud(txn, customers[txn.name]);
-        
-        closeEditModal();
-    }
-
-    function copyTxns(nameStr, period) {
-        const cTxns = txns.filter(t => t.name === nameStr);
-        const now = new Date();
-        const cutoff = new Date();
-        
-        if(period === 'week') cutoff.setDate(now.getDate() - 7);
-        if(period === 'month') cutoff.setMonth(now.getMonth() - 1);
-        if(period === 'quarter') cutoff.setMonth(now.getMonth() - 3);
-
-        const filtered = cTxns.filter(t => new Date(t.date) >= cutoff).sort((a,b) => a.date.localeCompare(b.date));
-        
-        let pLabel = period === 'week' ? 'Weekly' : (period === 'month' ? 'Monthly' : 'Quarterly');
-        let text = `*LedgerPro ${pLabel} Statement*\nCustomer: ${nameStr}\n------------------------\n`;
-        let total = 0;
-        
-        if(filtered.length === 0) {
-            text += `No transactions found in this period.\n`;
-        } else {
-            filtered.forEach(t => {
-                let typeStr = t.type === 'bill' ? 'SALE' : 'PAY ';
-                total += (t.type === 'bill' ? t.amount : -t.amount);
-                text += `${t.date} | ${typeStr} | ₹${t.amount} ${t.remarks ? '('+t.remarks+')' : ''}\n`;
-            });
-        }
-        
-        const allBal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
-        text += `------------------------\nPeriod Net: ₹${total}\n*Total Balance: ₹${allBal}*`;
-        
-        // Use modern clipboard if available, fallback to execCommand
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(() => showToast(`Copied ${pLabel} Statement`));
-        } else {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast(`Copied ${pLabel} Statement`);
-        }
-    }
-
-    function bulkWhatsApp() {
-        const names = Object.keys(customers);
-        if(names.length === 0) return showToast("No customers found", true);
-
-        const now = new Date();
-        const dayOfWeek = now.getDay(); 
-        const lastMon = new Date(now);
-        lastMon.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) - 7);
-        lastMon.setHours(0,0,0,0);
-        const lastSun = new Date(lastMon);
-        lastSun.setDate(lastMon.getDate() + 6);
-        lastSun.setHours(23,59,59,999);
-
-        const periodStr = lastMon.toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) + " - " + lastSun.toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
-
-        names.forEach((name, index) => {
-            setTimeout(() => {
-                const phone = customers[name].phone;
-                if(!phone) return;
-                const cTxns = txns.filter(t => t.name === name);
-                let openingBal = 0;
-                let weekList = [];
-
-                cTxns.forEach(t => {
-                    const tDate = new Date(t.date);
-                    const val = (t.type === 'bill' ? t.amount : -t.amount);
-                    if(tDate < lastMon) {
-                        openingBal += val;
-                    } else if (tDate >= lastMon && tDate <= lastSun) {
-                        weekList.push(`${t.type === 'bill' ? 'Sale' : 'Pay'}: ₹${t.amount} ${t.remarks ? '('+t.remarks+')' : ''}`);
-                    }
-                });
-
-                const currentTotalBal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
-                const msg = `*Weekly Statement: LedgerPro*\nCustomer: ${name}\nPeriod: ${periodStr}\n\nOpening Balance: ₹${Math.round(openingBal)}\n------------------\n${(weekList.length > 0 ? weekList.join('\n') : "No transactions this week")}\n------------------\n*Closing Balance: ₹${Math.round(currentTotalBal)}*\n\nPlease clear dues. Thank you!`;
-                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-            }, index * 1200); 
-        });
-        showToast(`Opening ${names.length} WhatsApp chats...`);
-    }
-
-    function saveLocal() {
-        localStorage.setItem('lp_customers', JSON.stringify(customers));
-        localStorage.setItem('lp_txns', JSON.stringify(txns));
-    }
-
-    async function syncToCloud(txn, customer) {
-        if(!SCRIPT_URL || SCRIPT_URL.length < 10) return;
-        const status = document.getElementById('syncStatus');
-        if (status) status.textContent = "⏳ Cloud Push...";
-        try {
-            await fetch(getCleanUrl(), {
-                method: 'POST',
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'addTxn', txn, customer })
-            });
-            if (status) status.textContent = "✅ Last Sync: " + new Date().toLocaleTimeString();
-        } catch (e) {
-            if (status) status.textContent = "❌ Push Failed (Network)";
-        }
-    }
-
-    function updateGlobalStats() {
-        const names = Object.keys(customers);
-        let totalDue = 0;
-        names.forEach(n => {
-            const bal = txns.filter(t => t.name === n).reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
-            if(bal > 0) totalDue += bal;
-        });
-        document.getElementById('topClients').textContent = names.length;
-        document.getElementById('topDue').textContent = '₹' + Math.round(totalDue).toLocaleString('en-IN');
-    }
-
-    function renderBooks(query = '') {
-        const list = document.getElementById('booksList');
-        
-        const customerBalances = Object.keys(customers).map(name => {
-            const cTxns = txns.filter(t => t.name === name);
-            const bal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
-            return { name, bal, cTxns };
-        });
-        
-        // Sort by highest balance first
-        customerBalances.sort((a, b) => b.bal - a.bal);
-
-        const filtered = customerBalances.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
-
-        list.innerHTML = filtered.map(c => {
-            const name = c.name;
-            const bal = c.bal;
-            const cTxns = c.cTxns.sort((a,b) => b.date.localeCompare(a.date));
-            const nameId = name.replace(/\s/g,'_');
-            const safeName = name.replace(/'/g, "\\'"); // Escaped for onClick functions
-            return `
-                <div class="cust-card">
-                    <div class="cust-head" onclick="toggleDetails('${nameId}')">
-                        <div>
-                            <div class="cust-name">${name}</div>
-                            <div style="font-size:0.6rem; color:var(--muted)">WA: ${customers[name].phone || 'N/A'}</div>
-                        </div>
-                        <div class="cust-bal" style="color:${bal > 0 ? 'var(--red)' : 'var(--green)'}">
-                            ₹${Math.abs(Math.round(bal)).toLocaleString('en-IN')}
-                        </div>
-                    </div>
-                    <div class="txn-history" id="hist-${nameId}">
-                        <div class="copy-btns">
-                            <button class="btn-copy" onclick="copyTxns('${safeName}', 'week')">📋 Copy Weekly</button>
-                            <button class="btn-copy" onclick="copyTxns('${safeName}', 'month')">📋 Copy Monthly</button>
-                            <button class="btn-copy" onclick="copyTxns('${safeName}', 'quarter')">📋 Copy Qtrly</button>
-                        </div>
-                        ${cTxns.length === 0 ? '<div style="font-size:0.7rem; color:var(--muted); text-align:center;">No history</div>' : ''}
-                        ${cTxns.map(t => `
-                            <div class="txn-item">
-                                <span style="color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}; font-weight:bold; font-size:0.7rem;">${t.type === 'bill' ? 'SALE' : 'PAY'}</span>
-                                <span style="font-family:var(--mono); font-size:0.8rem; font-weight:700;">₹${t.amount}</span>
-                                <span style="font-size:0.7rem; color:var(--text); line-height:1.2;">
-                                    ${t.date} <br>
-                                    <span style="color:var(--muted); font-size:0.6rem;">${t.remarks || ''}</span>
-                                </span>
-                                <button onclick="editTxn('${t.id}')" style="background:var(--surface2); border:1px solid var(--border); color:var(--accent); border-radius:4px; padding:6px; cursor:pointer; font-size:0.7rem;">✎</button>
-                            </div>
-                        `).join('')}
-                    </div>
+function toggleH(e, name) {
+    if(e.target.tagName === 'BUTTON' || e.target.classList.contains('edit-ic')) return;
+    const id = "h-"+name.replace(/\s/g,'_');
+    const el = document.getElementById(id);
+    const wasActive = el.style.display === 'block';
+    
+    document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
+    
+    if(!wasActive) {
+        const hist = db.t.filter(t => t.name === name).sort((a,b) => b.id - a.id).slice(0,30);
+        el.innerHTML = hist.map(t => {
+            const cleanDate = String(t.date).split('T')[0].split('-').reverse().join('/');
+            return `<div class="txn-item">
+                <small>${cleanDate} ${t.type==='bill'?'(+)':'(-)'}</small>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:12px;color:${t.type==='bill'?'var(--red)':'var(--grn)'}">₹${t.amount}</span>
+                    <span class="edit-ic" onclick="editT(${t.id})">✎</span>
                 </div>
-            `;
+            </div>`
         }).join('');
+        el.style.display = 'block';
     }
+}
 
-    function toggleDetails(id) {
-        const el = document.getElementById('hist-' + id);
-        if(el) el.classList.toggle('open');
-    }
+function closeAllPanes(e) {
+    if(!e.target.closest('.card')) document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
+}
 
-    function renderMetrics() {
-        const bills = txns.filter(t => t.type === 'bill');
-        const payments = txns.filter(t => t.type === 'pay');
-        const totalSales = bills.reduce((s,t) => s + t.amount, 0);
-        const totalCollection = payments.reduce((s,t) => s + t.amount, 0);
-        document.getElementById('m-avg').textContent = '₹' + (bills.length ? Math.round(totalSales/bills.length) : 0).toLocaleString('en-IN');
-        document.getElementById('m-turnover').textContent = '₹' + Math.round(totalSales).toLocaleString('en-IN');
-        document.getElementById('m-rec').textContent = totalSales ? Math.round((totalCollection/totalSales)*100) + '%' : '0%';
-        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const newCusts = Object.values(customers).filter(c => new Date(c.joined) > thirtyDaysAgo).length;
-        document.getElementById('m-new').textContent = newCusts;
+function editT(id) {
+    const t = db.t.find(x => x.id === id); if(!t) return;
+    editId = id;
+    document.getElementById('eA').value = t.amount;
+    document.getElementById('eR').value = t.remarks || '';
+    document.getElementById('modal').style.display = 'flex';
+}
 
-        const scores = Object.keys(customers).map(n => ({
-            name: n,
-            total: txns.filter(t => t.name === n && t.type === 'bill').reduce((s,t) => s + t.amount, 0)
-        })).sort((a,b) => b.total - a.total).slice(0,5);
+function closeM() { document.getElementById('modal').style.display = 'none'; }
 
-        document.getElementById('topListCont').innerHTML = scores.map((s, idx) => `
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:0.8rem;">
-                <span>${idx+1}. ${s.name}</span>
-                <span style="font-family:var(--mono); color:var(--green)">₹${Math.round(s.total).toLocaleString('en-IN')}</span>
-            </div>
-        `).join('') || '<div style="color:var(--muted); font-size:0.7rem;">No data.</div>';
-    }
+async function saveE() {
+    const t = db.t.find(x => x.id === editId);
+    t.amount = parseFloat(document.getElementById('eA').value);
+    t.remarks = document.getElementById('eR').value;
+    // Keep the original date on edit
+    saveL(); drawR(); updateS(); if(document.getElementById('sec-books').classList.contains('active')) drawB();
+    closeM(); msg("Updated");
+    fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', body:JSON.stringify({action:'addTxn', txn:t, customer:{name:t.name, ...db.c[t.name]}})});
+}
 
-    function showToast(msg, isErr = false) {
-        const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.style.background = isErr ? 'var(--red)' : 'var(--accent)';
-        t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 2500);
-    }
+function copy(e, name, days, label) {
+    e.stopPropagation();
+    const now = new Date();
+    // Use IST for comparison
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const limitDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000) + istOffset);
+    const limit = limitDate.toISOString().split('T')[0];
 
-    window.onload = init;
+    const userTxns = db.t.filter(t => t.name === name).sort((a,b) => a.id - b.id);
+    let op = 0, pL = [], cl = 0;
+    userTxns.forEach(t => {
+        const tDate = String(t.date).split('T')[0];
+        if(tDate < limit) op += (t.type==='bill'?t.amount:-t.amount);
+        else pL.push(t);
+        cl += (t.type==='bill'?t.amount:-t.amount);
+    });
+    let s = `Report: ${name}\nOld Bal: ₹${op}\n`;
+    pL.forEach(t => {
+        const cleanDate = String(t.date).split('T')[0].split('-').reverse().slice(0,2).join('/');
+        s += `${cleanDate} ${t.type==='bill'?'Bill':'Pay'} (₹${t.amount})\n`;
+    });
+    s += `Final Bal: ₹${cl}`;
+    const el = document.createElement('textarea'); el.value = s; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    msg("Copied!");
+}
+
+function updateS() {
+    let d=0; Object.keys(db.c).forEach(n=>{ const b=db.t.filter(t=>t.name===n).reduce((s,t)=>s+(t.type==='bill'?t.amount:-t.amount),0); if(b>0) d+=b; });
+    document.getElementById('tD').innerText = '₹'+Math.round(d); document.getElementById('tC').innerText = Object.keys(db.c).length;
+}
+
+function msg(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+window.onload = init;
 </script>
 </body>
 </html>
