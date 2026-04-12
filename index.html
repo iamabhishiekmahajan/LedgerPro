@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LedgerPro - Smart Cloud Khata</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface2: #1c1c28;
+            --border: #2a2a3a;
+            --accent: #f0c040;
+            --red: #ff4d4d;
+            --green: #00e676;
+            --text: #e8e8f0;
+            --muted: #8080a0;
+            --font: 'Inter', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding-bottom: 50px; }
+
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { font-size: 1rem; font-weight: 800; letter-spacing: -0.5px; }
+        .nav-logo span { color: var(--accent); }
+        .nav-tabs { display: flex; gap: 5px; }
+        .nav-tab { padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; border: none; background: transparent; color: var(--muted); }
+        .nav-tab.active { background: var(--accent); color: #000; }
+
+        .mini-stats { padding: 8px 15px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 15px; font-size: 0.65rem; font-weight: 600; }
+        .mini-stat-item { display: flex; flex-direction: column; }
+        .mini-stat-val { font-family: var(--mono); color: var(--text); font-size: 0.8rem; }
+
+        .section { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-weight: 700; cursor: pointer; text-align: center; }
+        .type-btn.active.bill { background: var(--red); color: white; border-color: var(--red); }
+        .type-btn.active.pay { background: var(--green); color: white; border-color: var(--green); }
+
+        .form-group { margin-bottom: 12px; position: relative; }
+        label { display: block; font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; font-weight: 700; }
+        input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-family: var(--font); font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--accent); }
+        
+        .autocomplete { position: absolute; width: 100%; background: var(--surface2); border: 1px solid var(--accent); border-radius: 8px; z-index: 10; top: 100%; margin-top: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); max-height: 200px; overflow-y: auto; }
+        .auto-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; }
+
+        .btn-submit { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-weight: 800; font-size: 1rem; margin-top: 10px; cursor: pointer; }
+        .btn-wa-bulk { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--green); background: transparent; color: var(--green); font-weight: 700; font-size: 0.8rem; margin-top: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+        .cust-head { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .cust-name { font-weight: 700; font-size: 0.95rem; }
+        .cust-bal { font-family: var(--mono); font-weight: 700; font-size: 0.9rem; }
+        
+        .txn-history { border-top: 1px solid var(--border); padding: 8px; display: none; background: rgba(0,0,0,0.15); }
+        .txn-history.open { display: block; }
+        .txn-item { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; padding: 10px 5px; border-bottom: 1px solid var(--border); }
+        
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .metric-card { background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .metric-val { font-size: 1.1rem; font-weight: 800; color: var(--accent); display: block; font-family: var(--mono); }
+        .metric-label { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
+
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; z-index: 1000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .sync-status { font-size: 0.6rem; margin-top: 10px; text-align: center; color: var(--muted); }
+        
+        .loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--surface2); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="loading-overlay">
+    <div class="spinner"></div>
+    <div style="font-weight: 800; letter-spacing: 2px;">LEDGER<span style="color:var(--accent)">PRO</span></div>
+    <div style="font-size: 0.6rem; color: var(--muted); margin-top: 10px;">PULLING CLOUD DATA...</div>
+</div>
+
+<nav class="nav">
+    <div class="nav-logo">Ledger<span>Pro</span></div>
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="tab('entry', this)">Add</button>
+        <button class="nav-tab" onclick="tab('books', this)">Books</button>
+        <button class="nav-tab" onclick="tab('metrics', this)">Metrics</button>
+    </div>
+</nav>
+
+<div class="mini-stats">
+    <div class="mini-stat-item">
+        <span class="mini-stat-val" id="topClients">0</span>
+        <label>Clients</label>
+    </div>
+    <div class="mini-stat-item">
+        <span class="mini-stat-val" style="color:var(--red)" id="topDue">₹0</span>
+        <label>Total Due</label>
+    </div>
+</div>
+
+<div class="section active" id="sec-entry">
+    <div class="type-toggle">
+        <button class="type-btn active bill" id="type-bill" onclick="setType('bill')">SALE (+)</button>
+        <button class="type-btn pay" id="type-pay" onclick="setType('pay')">PAYMENT (-)</button>
+    </div>
+
+    <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="inpName" placeholder="Min 3 characters" oninput="handleNameInput()">
+        <div id="autoContainer" class="autocomplete" style="display:none"></div>
+    </div>
+
+    <div class="form-group">
+        <label>WhatsApp Number</label>
+        <input type="tel" id="inpPhone" placeholder="91XXXXXXXXXX">
+    </div>
+
+    <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="inpAmount" placeholder="0.00" inputmode="decimal">
+    </div>
+
+    <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="inpDate">
+    </div>
+
+    <button class="btn-submit" onclick="submitEntry()">SAVE & SYNC</button>
+    <div class="sync-status" id="syncStatus">Cloud Bridge Active</div>
+</div>
+
+<div class="section" id="sec-books">
+    <input type="text" placeholder="🔍 Search customers..." class="form-group" style="width:100%; background:var(--surface2); border-radius:10px; padding:12px; color:white; border:1px solid var(--border);" oninput="renderBooks(this.value)">
+    <div id="booksList"></div>
+</div>
+
+<div class="section" id="sec-metrics">
+    <div class="metric-grid">
+        <div class="metric-card"><span class="metric-val" id="m-avg">₹0</span><span class="metric-label">Avg Sale/Bill</span></div>
+        <div class="metric-card"><span class="metric-val" id="m-turnover">₹0</span><span class="metric-label">Total Sale</span></div>
+        <div class="metric-card"><span class="metric-val" id="m-rec">0%</span><span class="metric-label">Payment Recovery</span></div>
+        <div class="metric-card"><span class="metric-val" id="m-new">0</span><span class="metric-label">New Cust (30d)</span></div>
+    </div>
+    
+    <button class="btn-wa-bulk" onclick="bulkWhatsApp()">
+        <span>🚀</span> SEND ALL WEEKLY REPORTS
+    </button>
+    <p style="font-size: 0.55rem; color: var(--muted); text-align: center; margin-top: 8px;">Opens WhatsApp for every customer with Mon-Sun summary.</p>
+
+    <div style="background:var(--surface); padding:15px; border-radius:12px; border:1px solid var(--border); margin-top: 20px;">
+        <h3 style="font-size:0.75rem; margin-bottom:12px; color:var(--accent); text-transform:uppercase;">Top 5 Growth Partners</h3>
+        <div id="topListCont"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // MAKE SURE THIS IS YOUR DEPLOYED WEB APP URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyggi16DisgBGx7WTW-a5ELGbPShoybgY9q7rD44zXUCC2B82RVcVMxI2YAo15rE-J5/exec"; 
+
+    let customers = JSON.parse(localStorage.getItem('lp_customers') || '{}');
+    let txns = JSON.parse(localStorage.getItem('lp_txns') || '[]');
+    let currentType = 'bill';
+
+    function getCleanUrl() {
+        return SCRIPT_URL.trim().replace(/\/+$/, '');
+    }
+
+    async function init() {
+        document.getElementById('inpDate').valueAsDate = new Date();
+        updateGlobalStats();
+        
+        // Hide loader after 8 seconds regardless of result so app is usable
+        setTimeout(() => {
+            const l = document.getElementById('loader');
+            if(l) l.style.display = 'none';
+        }, 8000);
+        
+        await pullFromCloud();
+        
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    async function pullFromCloud() {
+        if(!SCRIPT_URL || SCRIPT_URL.length < 10) return;
+        
+        const cleanUrl = getCleanUrl();
+
+        // Try JSONP immediately with a more reliable implementation
+        return new Promise((resolve) => {
+            const callbackName = 'lp_callback_' + Math.floor(Math.random() * 1000000);
+            const url = `${cleanUrl}?action=getData&callback=${callbackName}&t=${Date.now()}`;
+            
+            // Global callback receiver
+            window[callbackName] = function(data) {
+                if (data && data.customers) {
+                    processCloudData(data);
+                }
+                cleanup();
+                resolve();
+            };
+
+            const script = document.createElement('script');
+            script.src = url;
+            script.id = 'jsonp-script-' + callbackName;
+            
+            script.onerror = () => {
+                console.warn("JSONP Script Error - This usually means the AppScript isn't deployed correctly as 'Anyone'.");
+                showToast("Cloud connection weak", true);
+                cleanup();
+                resolve();
+            };
+
+            function cleanup() {
+                const s = document.getElementById('jsonp-script-' + callbackName);
+                if (s) s.parentNode.removeChild(s);
+                delete window[callbackName];
+            }
+
+            document.body.appendChild(script);
+            
+            // Safety timeout
+            setTimeout(() => { 
+                if (window[callbackName]) { 
+                    cleanup(); 
+                    resolve(); 
+                } 
+            }, 7500);
+        });
+    }
+
+    function processCloudData(data) {
+        if (data && data.customers && data.txns) {
+            customers = data.customers;
+            txns = data.txns;
+            saveLocal();
+            updateGlobalStats();
+            showToast("Cloud Data Synced");
+        }
+    }
+
+    function tab(name, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('sec-'+name).classList.add('active');
+        btn.classList.add('active');
+        if(name === 'books') renderBooks();
+        if(name === 'metrics') renderMetrics();
+    }
+
+    function setType(t) {
+        currentType = t;
+        document.getElementById('type-bill').classList.toggle('active', t === 'bill');
+        document.getElementById('type-pay').classList.toggle('active', t === 'pay');
+    }
+
+    function handleNameInput() {
+        const val = document.getElementById('inpName').value.trim();
+        const auto = document.getElementById('autoContainer');
+        if(val.length < 1) { auto.style.display = 'none'; return; }
+        const matches = Object.keys(customers).filter(n => n.toLowerCase().includes(val.toLowerCase())).sort();
+        if(matches.length > 0) {
+            auto.innerHTML = matches.map(m => `<div class="auto-item" onclick="selectName('${m}')">${m}</div>`).join('');
+            auto.style.display = 'block';
+        } else {
+            auto.style.display = 'none';
+        }
+    }
+
+    function selectName(n) {
+        document.getElementById('inpName').value = n;
+        document.getElementById('inpPhone').value = customers[n].phone || '';
+        document.getElementById('autoContainer').style.display = 'none';
+    }
+
+    async function submitEntry() {
+        const name = document.getElementById('inpName').value.trim();
+        const amount = parseFloat(document.getElementById('inpAmount').value);
+        const date = document.getElementById('inpDate').value;
+        const phone = document.getElementById('inpPhone').value.trim();
+
+        if(name.length < 3) return showToast("Name min 3 letters", true);
+        if(!amount || amount <= 0) return showToast("Enter valid amount", true);
+        if(phone.length < 10) return showToast("Valid WhatsApp no. required", true);
+
+        const isNew = !customers[name];
+        customers[name] = { phone: phone, joined: isNew ? date : (customers[name].joined || date) };
+
+        const newTxn = { id: Date.now(), name, amount, date, type: currentType };
+        txns.push(newTxn);
+
+        saveLocal();
+        updateGlobalStats();
+        
+        document.getElementById('inpName').value = '';
+        document.getElementById('inpAmount').value = '';
+        document.getElementById('inpPhone').value = '';
+
+        showToast("Entry Saved Locally");
+        await syncToCloud(newTxn, { name, ...customers[name] });
+    }
+
+    function bulkWhatsApp() {
+        const names = Object.keys(customers);
+        if(names.length === 0) return showToast("No customers found", true);
+
+        const now = new Date();
+        const dayOfWeek = now.getDay(); 
+        const lastMon = new Date(now);
+        lastMon.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) - 7);
+        lastMon.setHours(0,0,0,0);
+        const lastSun = new Date(lastMon);
+        lastSun.setDate(lastMon.getDate() + 6);
+        lastSun.setHours(23,59,59,999);
+
+        const periodStr = lastMon.toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) + " - " + lastSun.toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
+
+        names.forEach((name, index) => {
+            setTimeout(() => {
+                const phone = customers[name].phone;
+                const cTxns = txns.filter(t => t.name === name);
+                let openingBal = 0;
+                let weekList = [];
+
+                cTxns.forEach(t => {
+                    const tDate = new Date(t.date);
+                    const val = (t.type === 'bill' ? t.amount : -t.amount);
+                    if(tDate < lastMon) {
+                        openingBal += val;
+                    } else if (tDate >= lastMon && tDate <= lastSun) {
+                        weekList.push(`${t.type === 'bill' ? 'Sale' : 'Pay'}: ₹${t.amount} (${t.date})`);
+                    }
+                });
+
+                const currentTotalBal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
+                const msg = `*Weekly Statement: LedgerPro*\nCustomer: ${name}\nPeriod: ${periodStr}\n\nOpening Balance: ₹${Math.round(openingBal)}\n------------------\n${(weekList.length > 0 ? weekList.join('\n') : "No transactions this week")}\n------------------\n*Closing Balance: ₹${Math.round(currentTotalBal)}*\n\nPlease clear dues. Thank you!`;
+                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+            }, index * 1200); 
+        });
+        showToast(`Opening ${names.length} WhatsApp chats...`);
+    }
+
+    function saveLocal() {
+        localStorage.setItem('lp_customers', JSON.stringify(customers));
+        localStorage.setItem('lp_txns', JSON.stringify(txns));
+    }
+
+    async function syncToCloud(txn, customer) {
+        if(!SCRIPT_URL || SCRIPT_URL.length < 10) return;
+        const status = document.getElementById('syncStatus');
+        status.textContent = "⏳ Cloud Push...";
+        try {
+            await fetch(getCleanUrl(), {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'addTxn', txn, customer })
+            });
+            status.textContent = "✅ Last Sync: " + new Date().toLocaleTimeString();
+        } catch (e) {
+            status.textContent = "❌ Push Failed (Network)";
+        }
+    }
+
+    function updateGlobalStats() {
+        const names = Object.keys(customers);
+        let totalDue = 0;
+        names.forEach(n => {
+            const bal = txns.filter(t => t.name === n).reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
+            if(bal > 0) totalDue += bal;
+        });
+        document.getElementById('topClients').textContent = names.length;
+        document.getElementById('topDue').textContent = '₹' + Math.round(totalDue).toLocaleString('en-IN');
+    }
+
+    function renderBooks(query = '') {
+        const list = document.getElementById('booksList');
+        const sortedNames = Object.keys(customers).sort((a,b) => a.localeCompare(b));
+        const filtered = sortedNames.filter(n => n.toLowerCase().includes(query.toLowerCase()));
+
+        list.innerHTML = filtered.map(name => {
+            const cTxns = txns.filter(t => t.name === name).sort((a,b) => b.date.localeCompare(a.date));
+            const bal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
+            const nameId = name.replace(/\s/g,'_');
+            return `
+                <div class="cust-card">
+                    <div class="cust-head" onclick="toggleDetails('${nameId}')">
+                        <div>
+                            <div class="cust-name">${name}</div>
+                            <div style="font-size:0.6rem; color:var(--muted)">WA: ${customers[name].phone}</div>
+                        </div>
+                        <div class="cust-bal" style="color:${bal > 0 ? 'var(--red)' : 'var(--green)'}">
+                            ₹${Math.abs(Math.round(bal)).toLocaleString('en-IN')}
+                        </div>
+                    </div>
+                    <div class="txn-history" id="hist-${nameId}">
+                        ${cTxns.map(t => `
+                            <div class="txn-item">
+                                <span style="color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}; font-weight:bold; font-size:0.7rem;">${t.type === 'bill' ? 'SALE' : 'PAY'}</span>
+                                <span style="font-family:var(--mono); font-size:0.8rem;">₹${t.amount}</span>
+                                <span style="font-size:0.7rem; color:var(--muted)">${t.date}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById('hist-' + id);
+        if(el) el.classList.toggle('open');
+    }
+
+    function renderMetrics() {
+        const bills = txns.filter(t => t.type === 'bill');
+        const payments = txns.filter(t => t.type === 'pay');
+        const totalSales = bills.reduce((s,t) => s + t.amount, 0);
+        const totalCollection = payments.reduce((s,t) => s + t.amount, 0);
+        document.getElementById('m-avg').textContent = '₹' + (bills.length ? Math.round(totalSales/bills.length) : 0).toLocaleString('en-IN');
+        document.getElementById('m-turnover').textContent = '₹' + Math.round(totalSales).toLocaleString('en-IN');
+        document.getElementById('m-rec').textContent = totalSales ? Math.round((totalCollection/totalSales)*100) + '%' : '0%';
+        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const newCusts = Object.values(customers).filter(c => new Date(c.joined) > thirtyDaysAgo).length;
+        document.getElementById('m-new').textContent = newCusts;
+
+        const scores = Object.keys(customers).map(n => ({
+            name: n,
+            total: txns.filter(t => t.name === n && t.type === 'bill').reduce((s,t) => s + t.amount, 0)
+        })).sort((a,b) => b.total - a.total).slice(0,5);
+
+        document.getElementById('topListCont').innerHTML = scores.map((s, idx) => `
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:0.8rem;">
+                <span>${idx+1}. ${s.name}</span>
+                <span style="font-family:var(--mono); color:var(--green)">₹${Math.round(s.total).toLocaleString('en-IN')}</span>
+            </div>
+        `).join('') || '<div style="color:var(--muted); font-size:0.7rem;">No data.</div>';
+    }
+
+    function showToast(msg, isErr = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = isErr ? 'var(--red)' : 'var(--accent)';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 2500);
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
