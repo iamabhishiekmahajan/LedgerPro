@@ -31,28 +31,32 @@
         .nav-tab { padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; border: none; background: transparent; color: var(--muted); }
         .nav-tab.active { background: var(--accent); color: #000; }
 
-        .mini-stats { padding: 8px 15px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 15px; font-size: 0.65rem; font-weight: 600; }
+        .mini-stats { padding: 12px 15px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 20px; font-size: 0.65rem; font-weight: 600; margin-bottom: 15px; border-radius: 0 0 15px 15px;}
         .mini-stat-item { display: flex; flex-direction: column; }
-        .mini-stat-val { font-family: var(--mono); color: var(--text); font-size: 0.8rem; }
+        .mini-stat-val { font-family: var(--mono); color: var(--text); font-size: 0.9rem; }
 
         .section { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-weight: 700; cursor: pointer; text-align: center; }
-        .type-btn.active.bill { background: var(--red); color: white; border-color: var(--red); }
-        .type-btn.active.pay { background: var(--green); color: white; border-color: var(--green); }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 0.85rem;}
+        .type-btn.bill { background: rgba(255, 77, 77, 0.1); color: var(--red); border-color: var(--red); }
+        .type-btn.pay { background: rgba(0, 230, 118, 0.1); color: var(--green); border-color: var(--green); }
+        .type-btn.active.bill { background: var(--red); color: white; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
+        .type-btn.active.pay { background: var(--green); color: white; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3); }
+
+        #entry-form { animation: fadeIn 0.3s ease; background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;}
 
         .form-group { margin-bottom: 12px; position: relative; }
         label { display: block; font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; font-weight: 700; }
-        input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-family: var(--font); font-size: 1rem; outline: none; }
+        input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-family: var(--font); font-size: 0.95rem; outline: none; transition: border 0.2s; }
         input:focus { border-color: var(--accent); }
         
         .autocomplete { position: absolute; width: 100%; background: var(--surface2); border: 1px solid var(--accent); border-radius: 8px; z-index: 10; top: 100%; margin-top: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); max-height: 200px; overflow-y: auto; }
         .auto-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; }
 
-        .btn-submit { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-weight: 800; font-size: 1rem; margin-top: 10px; cursor: pointer; }
+        .btn-submit { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-weight: 800; font-size: 0.95rem; margin-top: 5px; cursor: pointer; }
         .btn-wa-bulk { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--green); background: transparent; color: var(--green); font-weight: 700; font-size: 0.8rem; margin-top: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
@@ -60,9 +64,13 @@
         .cust-name { font-weight: 700; font-size: 0.95rem; }
         .cust-bal { font-family: var(--mono); font-weight: 700; font-size: 0.9rem; }
         
-        .txn-history { border-top: 1px solid var(--border); padding: 8px; display: none; background: rgba(0,0,0,0.15); }
+        .txn-history { border-top: 1px solid var(--border); padding: 12px; display: none; background: rgba(0,0,0,0.15); }
         .txn-history.open { display: block; }
-        .txn-item { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; padding: 10px 5px; border-bottom: 1px solid var(--border); }
+        .txn-item { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 10px 5px; border-bottom: 1px dashed var(--border); }
+        .txn-item:last-child { border-bottom: none; }
+        
+        .copy-btns { display: flex; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .btn-copy { flex: 1; padding: 8px 5px; font-size: 0.65rem; font-weight: 700; background: var(--surface2); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
         
         .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .metric-card { background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
@@ -88,55 +96,70 @@
 <nav class="nav">
     <div class="nav-logo">Ledger<span>Pro</span></div>
     <div class="nav-tabs">
-        <button class="nav-tab active" onclick="tab('entry', this)">Add</button>
+        <button class="nav-tab active" onclick="tab('entry', this)">Home</button>
         <button class="nav-tab" onclick="tab('books', this)">Books</button>
         <button class="nav-tab" onclick="tab('metrics', this)">Metrics</button>
     </div>
 </nav>
 
-<div class="mini-stats">
-    <div class="mini-stat-item">
-        <span class="mini-stat-val" id="topClients">0</span>
-        <label>Clients</label>
-    </div>
-    <div class="mini-stat-item">
-        <span class="mini-stat-val" style="color:var(--red)" id="topDue">₹0</span>
-        <label>Total Due</label>
-    </div>
-</div>
-
 <div class="section active" id="sec-entry">
     <div class="type-toggle">
-        <button class="type-btn active bill" id="type-bill" onclick="setType('bill')">SALE (+)</button>
+        <button class="type-btn bill" id="type-bill" onclick="setType('bill')">SALE (+)</button>
         <button class="type-btn pay" id="type-pay" onclick="setType('pay')">PAYMENT (-)</button>
     </div>
 
-    <div class="form-group">
-        <label>Customer Name</label>
-        <input type="text" id="inpName" placeholder="Min 3 characters" oninput="handleNameInput()">
-        <div id="autoContainer" class="autocomplete" style="display:none"></div>
+    <!-- Hidden initially, opens when type is selected -->
+    <div id="entry-form" style="display: none;">
+        <div class="form-group">
+            <label>Customer Name</label>
+            <input type="text" id="inpName" placeholder="Enter name" oninput="handleNameInput()">
+            <div id="autoContainer" class="autocomplete" style="display:none"></div>
+        </div>
+
+        <!-- Hidden by default, shown only if customer is new -->
+        <div class="form-group" id="fg-phone" style="display:none;">
+            <label>WhatsApp Number (New Client)</label>
+            <input type="tel" id="inpPhone" placeholder="91XXXXXXXXXX">
+        </div>
+
+        <div class="form-group">
+            <label>Amount (₹)</label>
+            <input type="number" id="inpAmount" placeholder="0.00" inputmode="decimal">
+        </div>
+
+        <div class="form-group" style="text-align: right; margin-bottom: 5px;">
+            <button onclick="toggleRemark()" style="background:none; border:none; color:var(--accent); font-weight:700; font-size:0.7rem; cursor:pointer;">+ ADD REMARK</button>
+        </div>
+
+        <div class="form-group" id="fg-remark" style="display:none;">
+            <label>Remarks / Details</label>
+            <input type="text" id="inpRemark" placeholder="e.g. Item names or Ref no.">
+        </div>
+
+        <button class="btn-submit" onclick="submitEntry()">SAVE & SYNC</button>
+        <div class="sync-status" id="syncStatus">Cloud Bridge Active</div>
     </div>
 
-    <div class="form-group">
-        <label>WhatsApp Number</label>
-        <input type="tel" id="inpPhone" placeholder="91XXXXXXXXXX">
+    <!-- Today's Transactions shown below the buttons -->
+    <div style="margin-top: 25px;">
+        <h3 style="font-size:0.7rem; margin-bottom:12px; color:var(--muted); text-transform:uppercase; letter-spacing: 0.5px;">Today's Transactions</h3>
+        <div id="todayTxnsList"></div>
     </div>
-
-    <div class="form-group">
-        <label>Amount (₹)</label>
-        <input type="number" id="inpAmount" placeholder="0.00" inputmode="decimal">
-    </div>
-
-    <div class="form-group">
-        <label>Date</label>
-        <input type="date" id="inpDate">
-    </div>
-
-    <button class="btn-submit" onclick="submitEntry()">SAVE & SYNC</button>
-    <div class="sync-status" id="syncStatus">Cloud Bridge Active</div>
 </div>
 
-<div class="section" id="sec-books">
+<div class="section" id="sec-books" style="padding-top: 0;">
+    <!-- Stats moved here -->
+    <div class="mini-stats">
+        <div class="mini-stat-item">
+            <span class="mini-stat-val" id="topClients">0</span>
+            <label>Clients</label>
+        </div>
+        <div class="mini-stat-item">
+            <span class="mini-stat-val" style="color:var(--red)" id="topDue">₹0</span>
+            <label>Total Due</label>
+        </div>
+    </div>
+
     <input type="text" placeholder="🔍 Search customers..." class="form-group" style="width:100%; background:var(--surface2); border-radius:10px; padding:12px; color:white; border:1px solid var(--border);" oninput="renderBooks(this.value)">
     <div id="booksList"></div>
 </div>
@@ -162,23 +185,50 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Edit Modal -->
+<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--surface); padding:20px; border-radius:15px; width:90%; max-width:350px; border:1px solid var(--border);">
+        <h3 style="margin-bottom:15px; color:var(--accent);">Edit Transaction</h3>
+        <div class="form-group">
+            <label>Amount (₹)</label>
+            <input type="number" id="editAmt" inputmode="decimal">
+        </div>
+        <div class="form-group">
+            <label>Remarks / Details</label>
+            <input type="text" id="editRem">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button onclick="closeEditModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:white; font-weight:bold; cursor:pointer;">Cancel</button>
+            <button onclick="saveEditTxn()" style="flex:1; padding:12px; border-radius:8px; border:none; background:var(--accent); color:black; font-weight:bold; cursor:pointer;">Save</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // MAKE SURE THIS IS YOUR DEPLOYED WEB APP URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyggi16DisgBGx7WTW-a5ELGbPShoybgY9q7rD44zXUCC2B82RVcVMxI2YAo15rE-J5/exec"; 
 
     let customers = JSON.parse(localStorage.getItem('lp_customers') || '{}');
     let txns = JSON.parse(localStorage.getItem('lp_txns') || '[]');
-    let currentType = 'bill';
+    let currentType = ''; 
+    let editingTxnId = null;
 
     function getCleanUrl() {
         return SCRIPT_URL.trim().replace(/\/+$/, '');
     }
 
+    // Helper to get consistent local date
+    function getToday() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
     async function init() {
-        document.getElementById('inpDate').valueAsDate = new Date();
         updateGlobalStats();
+        renderTodayTxns();
         
-        // Hide loader after 8 seconds regardless of result so app is usable
         setTimeout(() => {
             const l = document.getElementById('loader');
             if(l) l.style.display = 'none';
@@ -191,19 +241,13 @@
 
     async function pullFromCloud() {
         if(!SCRIPT_URL || SCRIPT_URL.length < 10) return;
-        
         const cleanUrl = getCleanUrl();
-
-        // Try JSONP immediately with a more reliable implementation
         return new Promise((resolve) => {
             const callbackName = 'lp_callback_' + Math.floor(Math.random() * 1000000);
             const url = `${cleanUrl}?action=getData&callback=${callbackName}&t=${Date.now()}`;
             
-            // Global callback receiver
             window[callbackName] = function(data) {
-                if (data && data.customers) {
-                    processCloudData(data);
-                }
+                if (data && data.customers) processCloudData(data);
                 cleanup();
                 resolve();
             };
@@ -213,7 +257,6 @@
             script.id = 'jsonp-script-' + callbackName;
             
             script.onerror = () => {
-                console.warn("JSONP Script Error - This usually means the AppScript isn't deployed correctly as 'Anyone'.");
                 showToast("Cloud connection weak", true);
                 cleanup();
                 resolve();
@@ -226,14 +269,7 @@
             }
 
             document.body.appendChild(script);
-            
-            // Safety timeout
-            setTimeout(() => { 
-                if (window[callbackName]) { 
-                    cleanup(); 
-                    resolve(); 
-                } 
-            }, 7500);
+            setTimeout(() => { if (window[callbackName]) { cleanup(); resolve(); } }, 7500);
         });
     }
 
@@ -243,6 +279,8 @@
             txns = data.txns;
             saveLocal();
             updateGlobalStats();
+            renderTodayTxns();
+            if(document.getElementById('sec-books').classList.contains('active')) renderBooks();
             showToast("Cloud Data Synced");
         }
     }
@@ -260,15 +298,40 @@
         currentType = t;
         document.getElementById('type-bill').classList.toggle('active', t === 'bill');
         document.getElementById('type-pay').classList.toggle('active', t === 'pay');
+        document.getElementById('entry-form').style.display = 'block';
+    }
+
+    function toggleRemark() {
+        const el = document.getElementById('fg-remark');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        if(el.style.display === 'block') document.getElementById('inpRemark').focus();
     }
 
     function handleNameInput() {
         const val = document.getElementById('inpName').value.trim();
         const auto = document.getElementById('autoContainer');
-        if(val.length < 1) { auto.style.display = 'none'; return; }
-        const matches = Object.keys(customers).filter(n => n.toLowerCase().includes(val.toLowerCase())).sort();
+        const phoneGrp = document.getElementById('fg-phone');
+        
+        if(val.length < 1) { 
+            auto.style.display = 'none'; 
+            phoneGrp.style.display = 'none';
+            return; 
+        }
+
+        // Exact match check (case-insensitive) to hide phone field for existing clients
+        const exactMatch = Object.keys(customers).find(k => k.toLowerCase() === val.toLowerCase());
+        
+        if(exactMatch) {
+            phoneGrp.style.display = 'none';
+        } else if (val.length >= 3) {
+            phoneGrp.style.display = 'block'; // Show phone field for new client
+        } else {
+            phoneGrp.style.display = 'none';
+        }
+
+        const matches = Object.keys(customers).filter(n => n.toLowerCase().includes(val.toLowerCase()) && n.toLowerCase() !== val.toLowerCase()).sort();
         if(matches.length > 0) {
-            auto.innerHTML = matches.map(m => `<div class="auto-item" onclick="selectName('${m}')">${m}</div>`).join('');
+            auto.innerHTML = matches.map(m => `<div class="auto-item" onclick="selectName('${m.replace(/'/g, "\\'")}')">${m}</div>`).join('');
             auto.style.display = 'block';
         } else {
             auto.style.display = 'none';
@@ -279,33 +342,153 @@
         document.getElementById('inpName').value = n;
         document.getElementById('inpPhone').value = customers[n].phone || '';
         document.getElementById('autoContainer').style.display = 'none';
+        document.getElementById('fg-phone').style.display = 'none'; // Hide phone since they exist
     }
 
     async function submitEntry() {
+        if(!currentType) return showToast("Please select SALE or PAYMENT first", true);
+
         const name = document.getElementById('inpName').value.trim();
         const amount = parseFloat(document.getElementById('inpAmount').value);
-        const date = document.getElementById('inpDate').value;
+        const remark = document.getElementById('inpRemark').value.trim();
         const phone = document.getElementById('inpPhone').value.trim();
+        const date = getToday(); // Auto grab today's date
 
         if(name.length < 3) return showToast("Name min 3 letters", true);
         if(!amount || amount <= 0) return showToast("Enter valid amount", true);
-        if(phone.length < 10) return showToast("Valid WhatsApp no. required", true);
 
         const isNew = !customers[name];
-        customers[name] = { phone: phone, joined: isNew ? date : (customers[name].joined || date) };
+        if(isNew && phone.length < 10) return showToast("Valid WhatsApp no. required for new client", true);
 
-        const newTxn = { id: Date.now(), name, amount, date, type: currentType };
+        customers[name] = { phone: isNew ? phone : (customers[name].phone || ''), joined: isNew ? date : (customers[name].joined || date) };
+
+        const newTxn = { id: Date.now(), name, amount, date, type: currentType, remarks: remark };
         txns.push(newTxn);
 
         saveLocal();
         updateGlobalStats();
+        renderTodayTxns();
         
+        // Clear Form fields & Reset
         document.getElementById('inpName').value = '';
         document.getElementById('inpAmount').value = '';
         document.getElementById('inpPhone').value = '';
+        document.getElementById('inpRemark').value = '';
+        document.getElementById('fg-phone').style.display = 'none';
+        document.getElementById('fg-remark').style.display = 'none';
+        document.getElementById('entry-form').style.display = 'none';
+        document.getElementById('type-bill').classList.remove('active');
+        document.getElementById('type-pay').classList.remove('active');
+        currentType = '';
 
         showToast("Entry Saved Locally");
         await syncToCloud(newTxn, { name, ...customers[name] });
+    }
+
+    function renderTodayTxns() {
+        const todayStr = getToday();
+        const todays = txns.filter(t => t.date && String(t.date).substring(0, 10) === todayStr).reverse(); // Latest first
+        const list = document.getElementById('todayTxnsList');
+        
+        if(todays.length === 0) {
+            list.innerHTML = '<div style="color:var(--muted); font-size:0.8rem; text-align:center; padding: 20px; background:var(--surface); border-radius:12px;">No transactions today.</div>';
+            return;
+        }
+
+        list.innerHTML = todays.map(t => `
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:700; font-size:0.9rem;">${t.name}</div>
+                    <div style="color:var(--muted); font-size:0.7rem; margin-top:2px;">
+                        <span style="color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}; font-weight:bold;">${t.type === 'bill' ? 'SALE' : 'PAY'}</span>
+                        ${t.remarks ? ` • ${t.remarks}` : ''}
+                    </div>
+                </div>
+                <div style="font-family:var(--mono); font-weight:700; color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}">
+                    ₹${t.amount}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function editTxn(id) {
+        const txn = txns.find(t => String(t.id) === String(id));
+        if(!txn) return;
+        
+        editingTxnId = id;
+        document.getElementById('editAmt').value = txn.amount;
+        document.getElementById('editRem').value = txn.remarks || '';
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        editingTxnId = null;
+    }
+
+    function saveEditTxn() {
+        if(!editingTxnId) return;
+        const txn = txns.find(t => String(t.id) === String(editingTxnId));
+        if(!txn) return closeEditModal();
+
+        const newAmt = parseFloat(document.getElementById('editAmt').value);
+        if(isNaN(newAmt) || newAmt <= 0) return showToast("Invalid amount", true);
+
+        txn.amount = newAmt;
+        txn.remarks = document.getElementById('editRem').value.trim();
+
+        saveLocal();
+        updateGlobalStats();
+        renderBooks(document.querySelector('#sec-books input').value); 
+        renderTodayTxns();
+        showToast("Transaction updated");
+        
+        // Sync the edited transaction back to the cloud
+        syncToCloud(txn, customers[txn.name]);
+        
+        closeEditModal();
+    }
+
+    function copyTxns(nameStr, period) {
+        const cTxns = txns.filter(t => t.name === nameStr);
+        const now = new Date();
+        const cutoff = new Date();
+        
+        if(period === 'week') cutoff.setDate(now.getDate() - 7);
+        if(period === 'month') cutoff.setMonth(now.getMonth() - 1);
+        if(period === 'quarter') cutoff.setMonth(now.getMonth() - 3);
+
+        const filtered = cTxns.filter(t => new Date(t.date) >= cutoff).sort((a,b) => a.date.localeCompare(b.date));
+        
+        let pLabel = period === 'week' ? 'Weekly' : (period === 'month' ? 'Monthly' : 'Quarterly');
+        let text = `*LedgerPro ${pLabel} Statement*\nCustomer: ${nameStr}\n------------------------\n`;
+        let total = 0;
+        
+        if(filtered.length === 0) {
+            text += `No transactions found in this period.\n`;
+        } else {
+            filtered.forEach(t => {
+                let typeStr = t.type === 'bill' ? 'SALE' : 'PAY ';
+                total += (t.type === 'bill' ? t.amount : -t.amount);
+                text += `${t.date} | ${typeStr} | ₹${t.amount} ${t.remarks ? '('+t.remarks+')' : ''}\n`;
+            });
+        }
+        
+        const allBal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
+        text += `------------------------\nPeriod Net: ₹${total}\n*Total Balance: ₹${allBal}*`;
+        
+        // Use modern clipboard if available, fallback to execCommand
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => showToast(`Copied ${pLabel} Statement`));
+        } else {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast(`Copied ${pLabel} Statement`);
+        }
     }
 
     function bulkWhatsApp() {
@@ -326,6 +509,7 @@
         names.forEach((name, index) => {
             setTimeout(() => {
                 const phone = customers[name].phone;
+                if(!phone) return;
                 const cTxns = txns.filter(t => t.name === name);
                 let openingBal = 0;
                 let weekList = [];
@@ -336,7 +520,7 @@
                     if(tDate < lastMon) {
                         openingBal += val;
                     } else if (tDate >= lastMon && tDate <= lastSun) {
-                        weekList.push(`${t.type === 'bill' ? 'Sale' : 'Pay'}: ₹${t.amount} (${t.date})`);
+                        weekList.push(`${t.type === 'bill' ? 'Sale' : 'Pay'}: ₹${t.amount} ${t.remarks ? '('+t.remarks+')' : ''}`);
                     }
                 });
 
@@ -356,7 +540,7 @@
     async function syncToCloud(txn, customer) {
         if(!SCRIPT_URL || SCRIPT_URL.length < 10) return;
         const status = document.getElementById('syncStatus');
-        status.textContent = "⏳ Cloud Push...";
+        if (status) status.textContent = "⏳ Cloud Push...";
         try {
             await fetch(getCleanUrl(), {
                 method: 'POST',
@@ -364,9 +548,9 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'addTxn', txn, customer })
             });
-            status.textContent = "✅ Last Sync: " + new Date().toLocaleTimeString();
+            if (status) status.textContent = "✅ Last Sync: " + new Date().toLocaleTimeString();
         } catch (e) {
-            status.textContent = "❌ Push Failed (Network)";
+            if (status) status.textContent = "❌ Push Failed (Network)";
         }
     }
 
@@ -383,30 +567,51 @@
 
     function renderBooks(query = '') {
         const list = document.getElementById('booksList');
-        const sortedNames = Object.keys(customers).sort((a,b) => a.localeCompare(b));
-        const filtered = sortedNames.filter(n => n.toLowerCase().includes(query.toLowerCase()));
-
-        list.innerHTML = filtered.map(name => {
-            const cTxns = txns.filter(t => t.name === name).sort((a,b) => b.date.localeCompare(a.date));
+        
+        const customerBalances = Object.keys(customers).map(name => {
+            const cTxns = txns.filter(t => t.name === name);
             const bal = cTxns.reduce((s,t) => s + (t.type === 'bill' ? t.amount : -t.amount), 0);
+            return { name, bal, cTxns };
+        });
+        
+        // Sort by highest balance first
+        customerBalances.sort((a, b) => b.bal - a.bal);
+
+        const filtered = customerBalances.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+
+        list.innerHTML = filtered.map(c => {
+            const name = c.name;
+            const bal = c.bal;
+            const cTxns = c.cTxns.sort((a,b) => b.date.localeCompare(a.date));
             const nameId = name.replace(/\s/g,'_');
+            const safeName = name.replace(/'/g, "\\'"); // Escaped for onClick functions
             return `
                 <div class="cust-card">
                     <div class="cust-head" onclick="toggleDetails('${nameId}')">
                         <div>
                             <div class="cust-name">${name}</div>
-                            <div style="font-size:0.6rem; color:var(--muted)">WA: ${customers[name].phone}</div>
+                            <div style="font-size:0.6rem; color:var(--muted)">WA: ${customers[name].phone || 'N/A'}</div>
                         </div>
                         <div class="cust-bal" style="color:${bal > 0 ? 'var(--red)' : 'var(--green)'}">
                             ₹${Math.abs(Math.round(bal)).toLocaleString('en-IN')}
                         </div>
                     </div>
                     <div class="txn-history" id="hist-${nameId}">
+                        <div class="copy-btns">
+                            <button class="btn-copy" onclick="copyTxns('${safeName}', 'week')">📋 Copy Weekly</button>
+                            <button class="btn-copy" onclick="copyTxns('${safeName}', 'month')">📋 Copy Monthly</button>
+                            <button class="btn-copy" onclick="copyTxns('${safeName}', 'quarter')">📋 Copy Qtrly</button>
+                        </div>
+                        ${cTxns.length === 0 ? '<div style="font-size:0.7rem; color:var(--muted); text-align:center;">No history</div>' : ''}
                         ${cTxns.map(t => `
                             <div class="txn-item">
                                 <span style="color:${t.type === 'bill' ? 'var(--red)' : 'var(--green)'}; font-weight:bold; font-size:0.7rem;">${t.type === 'bill' ? 'SALE' : 'PAY'}</span>
-                                <span style="font-family:var(--mono); font-size:0.8rem;">₹${t.amount}</span>
-                                <span style="font-size:0.7rem; color:var(--muted)">${t.date}</span>
+                                <span style="font-family:var(--mono); font-size:0.8rem; font-weight:700;">₹${t.amount}</span>
+                                <span style="font-size:0.7rem; color:var(--text); line-height:1.2;">
+                                    ${t.date} <br>
+                                    <span style="color:var(--muted); font-size:0.6rem;">${t.remarks || ''}</span>
+                                </span>
+                                <button onclick="editTxn('${t.id}')" style="background:var(--surface2); border:1px solid var(--border); color:var(--accent); border-radius:4px; padding:6px; cursor:pointer; font-size:0.7rem;">✎</button>
                             </div>
                         `).join('')}
                     </div>
