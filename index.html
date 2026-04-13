@@ -4,269 +4,428 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LedgerPro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --bg: #0a0a0f; --surf: #13131a; --bord: #2a2a3a; --acc: #f0c040; --red: #ff4d4d; --grn: #00e676; --txt: #e8e8f0; --mut: #8080a0; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--txt); padding-bottom: 60px; font-size: 14px; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--txt); padding-bottom: 60px; font-size: 14px; overflow-x: hidden; touch-action: pan-y; }
+        
+        #ptr { text-align: center; height: 0; overflow: hidden; transition: height 0.2s; color: var(--acc); font-size: 12px; display: flex; align-items: center; justify-content: center; background: var(--surf); }
+        
         .nav { position: sticky; top: 0; z-index: 99; background: rgba(10,10,15,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--bord); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; gap: 5px; }
-        .tab { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border:none; background:transparent; color: var(--mut); cursor: pointer; }
+        .tab { padding: 8px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; border:none; background:transparent; color: var(--mut); cursor: pointer; }
         .tab.active { background: var(--acc); color: #000; }
-        .section { display: none; padding: 12px; }
+        
+        .section { display: none; padding: 12px; min-height: 80vh; }
         .section.active { display: block; }
-        .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; padding: 12px; margin-bottom: 12px; position: relative; }
+        
+        .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative; }
         .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .t-btn { padding: 10px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf); color: var(--mut); font-weight: 700; font-size: 12px; }
-        .t-btn.active.r { background: var(--red); color: #fff; }
-        .t-btn.active.g { background: var(--grn); color: #fff; }
-        input { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 8px; padding: 10px; color: #fff; margin-bottom: 10px; font-size: 14px; outline: none; }
-        .plus-btn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--bord); font-weight: 800; cursor: pointer; margin-left: 10px; font-size: 16px; }
-        .btn-sub { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 800; margin-top: 5px; cursor: pointer; }
-        .txn-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a2a3a55; }
-        .copy-btns { display: flex; gap: 4px; margin-top: 8px; }
-        .c-btn { font-size: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--bord); background: #1c1c28; color: var(--acc); font-weight: 700; }
-        .edit-ic { color: var(--mut); padding: 5px; cursor: pointer; font-size: 12px; }
+        .t-btn { padding: 12px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf); color: var(--mut); font-weight: 700; font-size: 12px; cursor: pointer; }
+        .t-btn.active.r { background: var(--red); color: #fff; border-color: var(--red); }
+        .t-btn.active.g { background: var(--grn); color: #fff; border-color: var(--grn); }
+        
+        input { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 8px; padding: 12px; color: #fff; margin-bottom: 10px; font-size: 14px; outline: none; }
+        .plus-btn { display: inline-flex; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--bord); font-weight: 700; cursor: pointer; font-size: 11px; margin-bottom: 10px; color: var(--mut); }
+        .btn-sub { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 800; margin-top: 5px; cursor: pointer; transition: 0.2s; }
+        
+        .txn-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a3a55; }
+        .edit-link { font-size: 10px; color: var(--acc); margin-left: 10px; border: 1px solid var(--bord); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; cursor: pointer; }
+        
+        .date-group { background: #1c1c28; padding: 5px 10px; font-size: 10px; font-weight: 800; color: var(--mut); border-radius: 4px; margin: 15px 0 8px 0; text-transform: uppercase; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
+        .modal-content { background: var(--surf); border: 1px solid var(--bord); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; }
+
+        #summary-capture { position: absolute; left: -9999px; top: 0; width: 500px; background: #0a0a0f; color: white; padding: 30px; border: 4px solid var(--acc); }
+        .summary-header { text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .summary-col { background: #13131a; border: 1px solid #2a2a3a; padding: 15px; border-radius: 12px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #ffffff11; padding-bottom: 4px; }
+
+        .autocomplete { position: absolute; background: #1c1c28; border: 1px solid var(--acc); width: 100%; z-index: 100; border-radius: 8px; max-height: 150px; overflow-y: auto; top: 50px; }
+        .auto-item { padding: 12px; border-bottom: 1px solid var(--bord); color: var(--txt); }
+        .city-header { margin-top: 15px; border-bottom: 1px solid var(--bord); padding-bottom: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; color: var(--acc); font-weight: 800; font-size: 11px; text-transform: uppercase; }
         .history-pane { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--bord); display: none; }
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-c { background: var(--surf); padding: 20px; border-radius: 15px; width: 100%; max-width: 320px; border: 1px solid var(--bord); }
-        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 999; display: none; }
-        .autocomplete { position: absolute; background: #1c1c28; border: 1px solid var(--acc); width: calc(100% - 24px); z-index: 100; border-radius: 8px; max-height: 150px; overflow-y: auto; }
-        .auto-item { padding: 10px; border-bottom: 1px solid var(--bord); }
+        
+        .share-tools { display: flex; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bord); }
+        .share-btn { flex: 1; padding: 6px; font-size: 9px; font-weight: 800; border-radius: 4px; border: 1px solid var(--bord); background: #1c1c28; color: var(--txt); cursor: pointer; }
+        
+        #loader { position:fixed; inset:0; background:var(--bg); z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 999; display: none; }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
-<div id="loader" style="position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;">Syncing...</div>
-<nav class="nav"><div style="font-weight:800">Ledger<span style="color:var(--acc)">Pro</span></div><div class="nav-tabs"><button class="tab active" onclick="tab('home',this)">HOME</button><button class="tab" onclick="tab('books',this)">BOOKS</button></div></nav>
+
+<div id="loader">
+    <div style="font-size: 24px; margin-bottom: 10px;">Ledger<span style="color:var(--acc)">Pro</span></div>
+    <div style="font-size: 12px; color: var(--mut)">Cloud Syncing...</div>
+</div>
+
+<div id="ptr">Pull down to Refresh...</div>
+
+<!-- Image Summary Capture Area (Hidden) -->
+<div id="summary-capture">
+    <div class="summary-header">
+        <h2 style="color: var(--acc); margin:0">Daily Ledger Report</h2>
+        <div id="summary-date-label" style="font-size: 12px; color: #888;"></div>
+    </div>
+    <div class="summary-grid">
+        <div class="summary-col">
+            <h4 style="color:var(--red); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">TOTAL BILLS (3 DAYS)</h4>
+            <div id="sale-summary-list"></div>
+        </div>
+        <div class="summary-col">
+            <h4 style="color:var(--grn); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">PAYMENTS (TODAY)</h4>
+            <div id="pay-summary-list"></div>
+        </div>
+    </div>
+    <div style="margin-top: 20px; text-align: center; font-size: 10px; color: #555;">Generated via LedgerPro Advanced</div>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom:15px; font-size:16px;">Edit Transaction</h3>
+        <input id="editA" type="number" placeholder="Amount (₹)">
+        <input id="editR" placeholder="Remarks">
+        <input id="editD" type="date">
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn-sub" style="background:var(--acc); color:#000; flex:2" onclick="saveEdit()">UPDATE</button>
+            <button class="btn-sub" style="background:var(--red); color:#fff; flex:1" onclick="deleteTxn()">DEL</button>
+        </div>
+        <button class="btn-sub" style="background:transparent; color:var(--mut); margin-top:10px;" onclick="closeModal()">CANCEL</button>
+    </div>
+</div>
+
+<nav class="nav">
+    <div style="font-weight:800">Ledger<span style="color:var(--acc)">Pro</span></div>
+    <div class="nav-tabs">
+        <button class="tab active" onclick="tab('home',this)">HOME</button>
+        <button class="tab" onclick="tab('books',this)">BOOKS</button>
+        <button class="tab" onclick="tab('add',this)">+ CLIENT</button>
+        <button onclick="generateImageSummary()" style="background:none; border:none; color:var(--acc); font-size:20px; margin-left:10px; cursor:pointer;" title="Download Summary Image">🖼️</button>
+    </div>
+</nav>
+
 <div id="toast" class="toast"></div>
 
-<!-- Home -->
+<!-- HOME -->
 <div id="sec-home" class="section active">
     <div class="type-toggle">
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
-        <button class="t-btn" id="bg" onclick="setT('pay')">PAY (-)</button>
+        <button class="t-btn" id="bg" onclick="setT('pay')">PAYMENT (-)</button>
     </div>
-    <div id="form" class="card" style="display:none">
-        <div style="display:flex;align-items:center;margin-bottom:10px;">
-            <div style="flex:1"><input id="iN" placeholder="Name" oninput="autoC()" style="margin:0"></div>
-            <div id="pBtn" class="plus-btn" onclick="tglR()">+</div>
+    
+    <div id="form-card" class="card" style="display:none">
+        <div style="position:relative; margin-bottom:10px;">
+            <input id="iN" placeholder="Customer Name" oninput="autoC('iN', 'auto')" autocomplete="off" style="margin:0">
+            <div id="auto" class="autocomplete" style="display:none"></div>
         </div>
-        <div id="auto" class="autocomplete" style="display:none"></div>
-        <input id="iA" type="number" placeholder="Amount" inputmode="decimal">
-        <input id="iR" placeholder="Remarks" style="display:none">
-        <button id="sBtn" class="btn-sub" onclick="sub()">ADD</button>
+        <input id="iA" type="number" placeholder="Amount (₹)" inputmode="decimal">
+        <div id="pBtn" class="plus-btn" onclick="tglR()">+ Remarks</div>
+        <input id="iR" placeholder="Details (Remarks)" style="display:none">
+        <button id="sBtn" class="btn-sub" onclick="sub()">ADD ENTRY</button>
     </div>
     <div id="list"></div>
 </div>
 
-<!-- Books -->
+<!-- BOOKS -->
 <div id="sec-books" class="section">
-    <div class="card" style="display:flex;gap:10px;text-align:center">
-        <div style="flex:1"><small>DUE</small><div id="tD" style="color:var(--red);font-weight:800">0</div></div>
-        <div style="flex:1"><small>CLIENTS</small><div id="tC" style="font-weight:800">0</div></div>
+    <div class="card" style="display:flex; gap:10px; text-align:center">
+        <div style="flex:1"><small style="color:var(--mut)">DUE</small><div id="tD" style="color:var(--red); font-weight:800">₹0</div></div>
+        <div style="flex:1"><small style="color:var(--mut)">CLIENTS</small><div id="tC" style="font-weight:800">0</div></div>
     </div>
     <input placeholder="Search..." oninput="drawB(this.value)">
     <div id="bList"></div>
 </div>
 
-<!-- Edit Modal -->
-<div id="modal"><div class="modal-c">
-    <h4 style="margin-bottom:15px;color:var(--acc)">Edit Transaction</h4>
-    <input id="eA" type="number" placeholder="Amount">
-    <input id="eR" placeholder="Remarks">
-    <div style="display:flex;gap:10px">
-        <button onclick="closeM()" style="flex:1;padding:10px;border-radius:8px;background:var(--bord);color:#fff;border:none">Cancel</button>
-        <button onclick="saveE()" style="flex:1;padding:10px;border-radius:8px;background:var(--acc);color:#000;border:none;font-weight:700">Save</button>
+<!-- ADD CLIENT -->
+<div id="sec-add" class="section">
+    <div class="card">
+        <h3 style="color:var(--acc); margin-bottom:15px; font-size:14px;">Add New Client</h3>
+        <input id="newCustName" placeholder="Full Name">
+        <input id="newCustCity" placeholder="City (Default: Local)">
+        <button class="btn-sub" style="background:var(--acc); color:#000;" onclick="handleNewClient()">REGISTER</button>
     </div>
-</div></div>
+</div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNacQk_xa6ImnNCkcXjRmC_U8i5yYNMIn7rqyvJHHJmdWBR5TbvFXR1mjXGx9PFFp7/exec";
-let db = JSON.parse(localStorage.getItem('lp_d') || '{"c":{},"t":[]}'), curT = '', editId = null;
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEVUXPtb58BxN4rL0cK0lmUDym4xEVckx4uRo6gRt-VjJypqi3l35uqs79f0dNvA7c/exec";
+let db = JSON.parse(localStorage.getItem('lp_d') || '{"c":{},"t":[],"p":[]}'), curT = '', editingId = null;
 
-// FIXED: Using India Standard Time (IST) instead of UTC
-const getD = () => {
+const getD = (offsetDays = 0) => {
     const now = new Date();
-    // Offset for IST (UTC + 5:30)
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const istTime = new Date(now.getTime() + istOffset);
-    return istTime.toISOString().split('T')[0];
+    const target = new Date(now.getTime() + (5.5 * 60 * 60 * 1000) - (offsetDays * 24 * 60 * 60 * 1000));
+    return target.toISOString().split('T')[0];
 };
 
 const saveL = () => localStorage.setItem('lp_d', JSON.stringify(db));
 
-async function init() { drawR(); await pull(); document.getElementById('loader').style.display='none'; }
+async function init() {
+    drawR(); updateS();
+    await pull(); 
+    document.getElementById('loader').style.display='none';
+    initPTR();
+}
 
 async function pull() {
-    return new Promise(res => {
+    return new Promise((res) => {
         const c = 'cb'+Date.now();
-        window[c] = (d) => { 
-            if(d.txns){ 
-                // Normalize dates from cloud to ensure they don't have time components
-                db.t = d.txns.map(t => ({...t, date: String(t.date).split('T')[0]}));
-                db.c = d.customers;
-                saveL(); drawR(); updateS(); 
-            } 
-            res(); 
+        window[c] = (d) => {
+            if(d.txns) {
+                db.t = d.txns.map(t => ({...t, date: String(t.date).split('T')[0], synced: true}));
+                db.c = d.customers || {};
+                saveL(); drawR(); updateS();
+                if(document.getElementById('sec-books').classList.contains('active')) drawB();
+            }
+            res();
         };
-        const s = document.createElement('script'); s.src=`${SCRIPT_URL}?action=getData&callback=${c}`; document.body.appendChild(s);
+        const s = document.createElement('script');
+        s.src = `${SCRIPT_URL}?action=getData&callback=${c}`;
+        document.body.appendChild(s);
     });
 }
 
-function tab(n,b) {
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.getElementById('sec-'+n).classList.add('active'); b.classList.add('active');
-    if(n==='books') drawB();
+function tab(n, b) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('sec-' + n).classList.add('active');
+    if(b) b.classList.add('active');
+    if(n === 'books') drawB();
 }
 
 function setT(t) {
     curT = t;
-    document.getElementById('br').className = t==='bill' ? 't-btn active r' : 't-btn';
-    document.getElementById('bg').className = t==='pay' ? 't-btn active g' : 't-btn';
-    const p = document.getElementById('pBtn');
-    p.style.color = p.style.borderColor = t==='bill' ? 'var(--red)' : 'var(--grn)';
-    document.getElementById('form').style.display = 'block';
+    document.getElementById('br').className = t === 'bill' ? 't-btn active r' : 't-btn';
+    document.getElementById('bg').className = t === 'pay' ? 't-btn active g' : 't-btn';
+    document.getElementById('form-card').style.display = 'block';
     const s = document.getElementById('sBtn');
-    s.style.background = t==='bill' ? 'var(--red)' : 'var(--grn)';
-    s.innerText = t==='bill' ? 'ADD BILL (+)' : 'ADD PAYMENT (-)';
+    s.style.background = t === 'bill' ? 'var(--red)' : 'var(--grn)';
+    s.innerText = t === 'bill' ? 'ADD BILL (+)' : 'ADD PAYMENT RECEIVED';
 }
 
-function tglR() { const r = document.getElementById('iR'); r.style.display = r.style.display==='none'?'block':'none'; }
+function tglR() {
+    const r = document.getElementById('iR');
+    r.style.display = r.style.display === 'none' ? 'block' : 'none';
+}
 
-function autoC() {
-    const v = document.getElementById('iN').value.toLowerCase(), a = document.getElementById('auto');
-    if(!v){ a.style.display='none'; return; }
+function openEdit(id) {
+    editingId = id;
+    const t = db.t.find(x => x.id === id);
+    if(!t) return;
+    document.getElementById('editA').value = t.amount;
+    document.getElementById('editR').value = t.remarks || '';
+    document.getElementById('editD').value = t.date;
+    document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('edit-modal').style.display = 'none'; editingId = null; }
+
+async function saveEdit() {
+    const idx = db.t.findIndex(x => x.id === editingId);
+    if(idx === -1) return;
+    const amt = parseFloat(document.getElementById('editA').value);
+    const rem = document.getElementById('editR').value;
+    const dat = document.getElementById('editD').value;
+    
+    db.t[idx].amount = amt;
+    db.t[idx].remarks = rem;
+    db.t[idx].date = dat;
+    db.t[idx].synced = false;
+    
+    saveL(); drawR(); updateS(); closeModal();
+    msg("Updating...");
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) }).then(() => pull());
+}
+
+async function deleteTxn() {
+    const idx = db.t.findIndex(x => x.id === editingId);
+    if(idx === -1) return;
+    const txnToDelete = db.t[idx];
+    db.t.splice(idx, 1);
+    saveL(); drawR(); updateS(); closeModal();
+    msg("Deleting...");
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: txnToDelete.id }) }).then(() => pull());
+}
+
+function autoC(inId, auId) {
+    const v = document.getElementById(inId).value.toLowerCase(), a = document.getElementById(auId);
+    if(!v) { a.style.display='none'; return; }
     const m = Object.keys(db.c).filter(n => n.toLowerCase().includes(v));
-    a.innerHTML = m.map(n => `<div class="auto-item" onclick="sel('${n}')">${n}</div>`).join('');
+    a.innerHTML = m.map(n => `<div class="auto-item" onclick="sel('${n.replace(/'/g,"\\'")}','${inId}','${auId}')">${n} <small>(${db.c[n].city})</small></div>`).join('');
     a.style.display = m.length ? 'block' : 'none';
 }
-function sel(n) { document.getElementById('iN').value=n; document.getElementById('auto').style.display='none'; }
+
+function sel(n, inId, auId) { document.getElementById(inId).value = n; document.getElementById(auId).style.display = 'none'; }
+
+async function handleNewClient() {
+    const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local", d = getD();
+    if(!n || db.c[n]) return msg("Error");
+    db.c[n] = { joined: d, city: c };
+    saveL(); updateS(); msg("Registered!");
+    tab('home', document.querySelectorAll('.tab')[0]);
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => pull());
+}
 
 async function sub() {
     const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
-    if(!n || !a) return;
-    const tx = { id:Date.now(), name:n, amount:a, date:d, type:curT, remarks:r };
-    db.t.push(tx); if(!db.c[n]) db.c[n] = { joined:d };
-    saveL(); drawR(); updateS();
+    if(!n || !a || !db.c[n]) return msg("Check Input");
+    const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r, synced: false };
+    db.t.push(tx);
+    saveL(); drawR(); updateS(); msg("Added!");
     document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
-    msg("Saved");
-    fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', body:JSON.stringify({action:'addTxn', txn:tx, customer:{name:n, ...db.c[n]}})});
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => pull());
+}
+
+function generateImageSummary() {
+    const today = getD();
+    const yesterday = getD(1);
+    const dayBefore = getD(2);
+    
+    // Left Side Calculations (Sales Only)
+    const saleToday = db.t.filter(t => t.date === today && t.type === 'bill').reduce((s,t) => s + t.amount, 0);
+    const saleYest = db.t.filter(t => t.date === yesterday && t.type === 'bill').reduce((s,t) => s + t.amount, 0);
+    const saleBefore = db.t.filter(t => t.date === dayBefore && t.type === 'bill').reduce((s,t) => s + t.amount, 0);
+    
+    // Right Side (Today's Payments with Names)
+    const payToday = db.t.filter(t => t.date === today && t.type === 'pay');
+    
+    document.getElementById('summary-date-label').innerText = today.split('-').reverse().join('/');
+    
+    document.getElementById('sale-summary-list').innerHTML = `
+        <div class="summary-item"><span>Today (Sale):</span><span>₹${saleToday}</span></div>
+        <div class="summary-item"><span>Yesterday (Sale):</span><span>₹${saleYest}</span></div>
+        <div class="summary-item"><span>${dayBefore.split('-').reverse().join('/')} (Sale):</span><span>₹${saleBefore}</span></div>
+    `;
+    
+    document.getElementById('pay-summary-list').innerHTML = payToday.length > 0 ? 
+        payToday.map(p => `<div class="summary-item"><span>${p.name}:</span><span>₹${p.amount}</span></div>`).join('') :
+        `<div style="font-size:10px; color:#555; text-align:center; padding-top:10px">No payments today</div>`;
+        
+    msg("Preparing Image...");
+    const capture = document.getElementById('summary-capture');
+    html2canvas(capture).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `LedgerPro_Report_${today}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        msg("Report Saved!");
+    });
 }
 
 function drawR() {
-    const l = document.getElementById('list'), s = [...db.t].sort((a,b)=>b.id-a.id).slice(0,30);
-    l.innerHTML = s.map(t => {
-        const cleanDate = String(t.date).split('T')[0].split('-').reverse().join('/');
-        return `<div class="txn-item">
-            <div style="flex:1"><b>${t.name}</b><br><small>${cleanDate} ${t.remarks?'• '+t.remarks:''}</small></div>
-            <div style="display:flex;align-items:center;gap:12px">
-                <b style="color:${t.type==='bill'?'var(--red)':'var(--grn)'}">₹${t.amount}</b>
-                <span class="edit-ic" onclick="editT(${t.id})">✎</span>
+    const l = document.getElementById('list'), today = getD(), s = [...db.t].filter(t => t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 40);
+    let html = '', lastD = '';
+    s.forEach(t => {
+        const d = String(t.date).split('T')[0];
+        if(d !== lastD) { html += `<div class="date-group">${d === today ? "Today" : d.split('-').reverse().join('/')}</div>`; lastD = d; }
+        const st = t.synced ? '✅' : '⚠️';
+        html += `
+        <div class="txn-item">
+            <div>
+                <b>${t.name}</b> ${st} 
+                <span class="edit-link" onclick="openEdit(${t.id})">Edit</span>
+                <br>
+                <small style="color:var(--mut)">${t.remarks||''}</small>
             </div>
-        </div>`
-    }).join('');
+            <div style="color:${t.type==='bill'?'var(--red)':'var(--grn)'}; font-weight:800">
+                ₹${t.amount}
+            </div>
+        </div>`;
+    });
+    l.innerHTML = html || '<div style="text-align:center; padding:40px; color:var(--mut)">No transactions yet.</div>';
 }
 
-function drawB(q='') {
-    const l = document.getElementById('bList');
-    const data = Object.keys(db.c).map(n => {
-        const b = db.t.filter(t=>t.name===n).reduce((s,t)=>s+(t.type==='bill'?t.amount:-t.amount), 0);
-        return { n, b };
-    }).filter(x => x.n.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.b - a.b);
-
-    l.innerHTML = data.map(x => `
-        <div class="card" onclick="toggleH(event, '${x.n}')">
-            <div style="display:flex;justify-content:space-between"><b>${x.n}</b><b style="color:${x.b>0?'var(--red)':'var(--grn)'}">₹${x.b}</b></div>
-            <div class="copy-btns">
-                <button class="c-btn" onclick="copy(event, '${x.n}', 7, 'Week')">W</button>
-                <button class="c-btn" onclick="copy(event, '${x.n}', 30, 'Month')">M</button>
-                <button class="c-btn" onclick="copy(event, '${x.n}', 90, 'Quarter')">Q</button>
-            </div>
-            <div id="h-${x.n.replace(/\s/g,'_')}" class="history-pane"></div>
-        </div>`).join('');
+function drawB(q = '') {
+    const l = document.getElementById('bList'), query = q.toLowerCase();
+    let cities = {};
+    Object.keys(db.c).forEach(n => {
+        const city = db.c[n].city || "Local", bal = db.t.filter(t => t.name === n).reduce((s, t) => s + (t.type==='bill' ? t.amount : (t.type==='pay' ? -t.amount : 0)), 0);
+        if(n.toLowerCase().includes(query) || city.toLowerCase().includes(query)) {
+            if(!cities[city]) cities[city] = { total: 0, items: [] };
+            cities[city].items.push({ name: n, bal });
+            cities[city].total += bal;
+        }
+    });
+    const sortedCities = Object.keys(cities).sort((a, b) => cities[b].total - cities[a].total);
+    let html = '';
+    sortedCities.forEach(cName => {
+        html += `<div class="city-header"><span>${cName}</span><span>₹${Math.round(cities[cName].total)}</span></div>`;
+        cities[cName].items.sort((a,b) => b.bal - a.bal).forEach(x => {
+            html += `<div class="card" onclick="toggleH(event, '${x.name.replace(/'/g,"\\'")}')">
+                <div style="display:flex; justify-content:space-between"><b>${x.name}</b><b style="color:${x.bal > 0 ? 'var(--red)' : 'var(--grn)'}">₹${Math.round(x.bal)}</b></div>
+                <div id="h-${x.name.replace(/\s/g,'_')}" class="history-pane" onclick="event.stopPropagation()"></div>
+            </div>`;
+        });
+    });
+    l.innerHTML = html;
 }
 
 function toggleH(e, name) {
-    if(e.target.tagName === 'BUTTON' || e.target.classList.contains('edit-ic')) return;
-    const id = "h-"+name.replace(/\s/g,'_');
-    const el = document.getElementById(id);
-    const wasActive = el.style.display === 'block';
-    
+    const id = "h-" + name.replace(/\s/g,'_'), el = document.getElementById(id);
+    if(el.style.display === 'block') { el.style.display = 'none'; return; }
     document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
-    
-    if(!wasActive) {
-        const hist = db.t.filter(t => t.name === name).sort((a,b) => b.id - a.id).slice(0,30);
-        el.innerHTML = hist.map(t => {
-            const cleanDate = String(t.date).split('T')[0].split('-').reverse().join('/');
-            return `<div class="txn-item">
-                <small>${cleanDate} ${t.type==='bill'?'(+)':'(-)'}</small>
-                <div style="display:flex;align-items:center;gap:8px">
-                    <span style="font-size:12px;color:${t.type==='bill'?'var(--red)':'var(--grn)'}">₹${t.amount}</span>
-                    <span class="edit-ic" onclick="editT(${t.id})">✎</span>
-                </div>
-            </div>`
-        }).join('');
-        el.style.display = 'block';
-    }
+    const hist = db.t.filter(t => t.name === name && t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 15);
+    el.innerHTML = hist.map(t => {
+        const d = String(t.date).split('T')[0].split('-').reverse().join('/');
+        return `<div class="txn-item" style="font-size:11px"><small>${d} (${t.type.toUpperCase()})</small><span onclick="openEdit(${t.id})" class="edit-link">Edit</span><span>₹${t.amount}</span></div>`;
+    }).join('') + `
+    <div class="share-tools">
+        <button class="share-btn" onclick="copyReport('${name.replace(/'/g,"\\'")}', 7)">WEEKLY</button>
+        <button class="share-btn" onclick="copyReport('${name.replace(/'/g,"\\'")}', 30)">MONTHLY</button>
+        <button class="share-btn" onclick="copyReport('${name.replace(/'/g,"\\'")}', 90)">QUARTERLY</button>
+    </div>`;
+    el.style.display = 'block';
 }
 
-function closeAllPanes(e) {
-    if(!e.target.closest('.card')) document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
-}
-
-function editT(id) {
-    const t = db.t.find(x => x.id === id); if(!t) return;
-    editId = id;
-    document.getElementById('eA').value = t.amount;
-    document.getElementById('eR').value = t.remarks || '';
-    document.getElementById('modal').style.display = 'flex';
-}
-
-function closeM() { document.getElementById('modal').style.display = 'none'; }
-
-async function saveE() {
-    const t = db.t.find(x => x.id === editId);
-    t.amount = parseFloat(document.getElementById('eA').value);
-    t.remarks = document.getElementById('eR').value;
-    // Keep the original date on edit
-    saveL(); drawR(); updateS(); if(document.getElementById('sec-books').classList.contains('active')) drawB();
-    closeM(); msg("Updated");
-    fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', body:JSON.stringify({action:'addTxn', txn:t, customer:{name:t.name, ...db.c[t.name]}})});
-}
-
-function copy(e, name, days, label) {
-    e.stopPropagation();
-    const now = new Date();
-    // Use IST for comparison
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const limitDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000) + istOffset);
-    const limit = limitDate.toISOString().split('T')[0];
-
-    const userTxns = db.t.filter(t => t.name === name).sort((a,b) => a.id - b.id);
-    let op = 0, pL = [], cl = 0;
-    userTxns.forEach(t => {
-        const tDate = String(t.date).split('T')[0];
-        if(tDate < limit) op += (t.type==='bill'?t.amount:-t.amount);
-        else pL.push(t);
-        cl += (t.type==='bill'?t.amount:-t.amount);
+function copyReport(name, days) {
+    const cutoff = getD(days);
+    const allTxns = db.t.filter(t => t.name === name).sort((a,b) => a.id - b.id);
+    let openingBal = 0, recentTxns = [], finalBal = 0;
+    allTxns.forEach(t => {
+        const val = t.type === 'bill' ? t.amount : (t.type === 'pay' ? -t.amount : 0);
+        if (t.date < cutoff) openingBal += val;
+        else if (t.type !== 'join') {
+            const dStr = t.date.split('-').slice(1).reverse().join('/');
+            recentTxns.push(`${dStr} ${t.type==='bill'?'Bill':'Cash'}: ₹${t.amount}`);
+        }
+        finalBal += val;
     });
-    let s = `Report: ${name}\nOld Bal: ₹${op}\n`;
-    pL.forEach(t => {
-        const cleanDate = String(t.date).split('T')[0].split('-').reverse().slice(0,2).join('/');
-        s += `${cleanDate} ${t.type==='bill'?'Bill':'Pay'} (₹${t.amount})\n`;
-    });
-    s += `Final Bal: ₹${cl}`;
-    const el = document.createElement('textarea'); el.value = s; document.body.appendChild(el); el.select();
-    document.execCommand('copy'); document.body.removeChild(el);
-    msg("Copied!");
+    const period = days === 7 ? "Weekly" : (days === 30 ? "Monthly" : "Quarterly");
+    const msgBody = `*LedgerPro Statement (${period})*\nCustomer: *${name}*\n--------------------------\nLast Balance: ₹${Math.round(openingBal)}\n--------------------------\n${recentTxns.length?recentTxns.join('\n'):"No activity"}\n--------------------------\n*Final Balance: ₹${Math.round(finalBal)}*`;
+    const el = document.createElement('textarea'); el.value = msgBody; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el); msg("Copied to Clipboard!");
 }
+
+function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.modal-content')) document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none'); }
 
 function updateS() {
-    let d=0; Object.keys(db.c).forEach(n=>{ const b=db.t.filter(t=>t.name===n).reduce((s,t)=>s+(t.type==='bill'?t.amount:-t.amount),0); if(b>0) d+=b; });
-    document.getElementById('tD').innerText = '₹'+Math.round(d); document.getElementById('tC').innerText = Object.keys(db.c).length;
+    let due = 0;
+    Object.keys(db.c).forEach(n => {
+        const b = db.t.filter(t => t.name === n).reduce((s, t) => s + (t.type==='bill' ? t.amount : (t.type==='pay' ? -t.amount : 0)), 0);
+        if(b > 0) due += b;
+    });
+    document.getElementById('tD').innerText = '₹' + Math.round(due);
+    document.getElementById('tC').innerText = Object.keys(db.c).length;
 }
 
-function msg(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+
+function initPTR() {
+    let sY = 0, dist = 0; const ptr = document.getElementById('ptr');
+    window.addEventListener('touchstart', (e) => { if (window.scrollY === 0) sY = e.touches[0].pageY; }, {passive: true});
+    window.addEventListener('touchmove', (e) => {
+        if (sY === 0 || window.scrollY > 0) return;
+        dist = e.touches[0].pageY - sY;
+        if (dist > 0 && dist < 100) { ptr.style.height = dist + 'px'; ptr.innerText = dist > 60 ? 'Release to Sync 🔄' : 'Pull to Sync...'; }
+    }, {passive: true});
+    window.addEventListener('touchend', async () => {
+        if (dist > 60) { ptr.innerText = 'Syncing...'; ptr.style.height = '40px'; await pull(); msg("Cloud Synced"); }
+        ptr.style.height = '0'; sY = 0; dist = 0;
+    });
+}
 window.onload = init;
 </script>
 </body>
