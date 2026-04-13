@@ -38,8 +38,8 @@
         .modal-content { background: var(--surf); border: 1px solid var(--bord); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; }
 
         .history-pane { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--bord); }
-        .copy-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 10px; }
-        .copy-btn { padding: 8px 4px; background: #1c1c28; color: var(--acc); border: 1px solid var(--bord); border-radius: 6px; font-size: 9px; font-weight: 700; cursor: pointer; }
+        .copy-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .copy-btn { padding: 10px 4px; background: #1c1c28; color: var(--acc); border: 1px solid var(--bord); border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
 
         .run-bal { font-size: 10px; font-weight: 500; display: block; margin-top: 2px; }
 
@@ -59,6 +59,8 @@
         .sync-indicator { position: fixed; bottom: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: #444; transition: 0.3s; z-index: 100; }
         .sync-indicator.syncing { background: var(--acc); box-shadow: 0 0 10px var(--acc); }
         .sync-indicator.success { background: var(--grn); }
+
+        .remark-toggle { color: var(--acc); font-size: 11px; font-weight: 700; cursor: pointer; display: inline-block; margin-bottom: 10px; }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
@@ -66,6 +68,7 @@
 <div id="ptr">Pull down to Sync...</div>
 <div id="sync-indicator" class="sync-indicator"></div>
 
+<!-- Off-screen Capture -->
 <div id="summary-capture">
     <div class="summary-header">
         <h2 style="color: var(--acc); margin:0">Daily Business Summary</h2>
@@ -114,12 +117,13 @@
         <button class="tab active" onclick="tab('home',this)">HOME</button>
         <button class="tab" onclick="tab('books',this)">BOOKS</button>
         <button class="tab" onclick="tab('add',this)">+ CLIENT</button>
-        <button onclick="openReportModal()" style="background:none; border:none; color:var(--acc); font-size:22px; margin-left:10px; cursor:pointer;">🖼️</button>
+        <button onclick="openReportModal()" style="background:none; border:none; color:var(--acc); font-size:18px; margin-left:10px; cursor:pointer;">📋</button>
     </div>
 </nav>
 
 <div id="toast" class="toast"></div>
 
+<!-- HOME SECTION -->
 <div id="sec-home" class="section active">
     <div class="type-toggle">
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
@@ -131,21 +135,28 @@
             <div id="auto" class="autocomplete" style="display:none"></div>
         </div>
         <input id="iA" type="number" placeholder="Amount (₹)" inputmode="decimal">
-        <input id="iR" placeholder="Details (Remarks)">
+        
+        <div id="rem-wrap" style="display:none">
+            <input id="iR" placeholder="Details (Remarks)">
+        </div>
+        <div id="rem-toggle" class="remark-toggle" onclick="showRem()">+ Add Remarks</div>
+        
         <button id="sBtn" class="btn-sub" onclick="sub()">ADD ENTRY</button>
     </div>
     <div id="list"></div>
 </div>
 
+<!-- BOOKS SECTION -->
 <div id="sec-books" class="section">
     <div class="card" style="display:flex; gap:10px; text-align:center">
         <div style="flex:1"><small style="color:var(--mut)">DUE</small><div id="tD" style="color:var(--red); font-weight:800">₹0</div></div>
         <div style="flex:1"><small style="color:var(--mut)">CLIENTS</small><div id="tC" style="font-weight:800">0</div></div>
     </div>
-    <input placeholder="Search clients..." oninput="drawB(this.value)">
+    <input placeholder="Search name or city..." oninput="drawB(this.value)">
     <div id="bList"></div>
 </div>
 
+<!-- ADD CLIENT SECTION -->
 <div id="sec-add" class="section">
     <div class="card">
         <h3 style="color:var(--acc); margin-bottom:15px; font-size:14px;">Add New Client</h3>
@@ -166,46 +177,34 @@ const getD = (offset = 0) => {
 
 const saveL = () => localStorage.setItem('lp_d', JSON.stringify(db));
 
-// INITIALIZATION
 function init() {
-    // 1. Immediate UI Render from Local Data
     drawR(); 
     updateS();
-    
-    // 2. Automatic Silent Sync for GitHub Pages launch
     autoSync();
-    
-    // 3. Setup Pull-to-refresh
     initPTR();
 }
 
 async function autoSync() {
     const indicator = document.getElementById('sync-indicator');
     indicator.classList.add('syncing');
-    
     try {
         await pull();
         indicator.classList.remove('syncing');
         indicator.classList.add('success');
         setTimeout(() => indicator.classList.remove('success'), 2000);
-    } catch (e) {
-        indicator.classList.remove('syncing');
-    }
+    } catch (e) { indicator.classList.remove('syncing'); }
 }
 
 async function pull() {
     return new Promise((res, rej) => {
         const c = 'cb'+Date.now();
         const timeout = setTimeout(() => rej('timeout'), 10000);
-        
         window[c] = (d) => {
             clearTimeout(timeout);
             if(d.txns) {
                 db.t = d.txns.map(t => ({...t, date: String(t.date).split('T')[0], synced: true}));
                 db.c = d.customers || {};
-                saveL(); 
-                drawR(); 
-                updateS();
+                saveL(); drawR(); updateS();
                 if(document.getElementById('sec-books').classList.contains('active')) drawB();
             }
             res();
@@ -235,30 +234,27 @@ function setT(t) {
     s.innerText = t === 'bill' ? 'ADD BILL (+)' : 'ADD PAYMENT RECEIVED';
 }
 
-function openReportModal() {
-    document.getElementById('report-modal').style.display = 'flex';
+function showRem() {
+    document.getElementById('rem-wrap').style.display = 'block';
+    document.getElementById('rem-toggle').style.display = 'none';
 }
+
+function openReportModal() { document.getElementById('report-modal').style.display = 'flex'; }
 function closeReportModal() { document.getElementById('report-modal').style.display = 'none'; }
 
 function generateSpecificReport(offset) {
     const targetDate = getD(offset);
     const dayBills = db.t.filter(t => t.date === targetDate && t.type === 'bill');
     const dayPays = db.t.filter(t => t.date === targetDate && t.type === 'pay');
-    
     document.getElementById('summary-date-label').innerText = targetDate.split('-').reverse().join('/');
-    
-    let saleHtml = '', saleTotal = 0;
-    dayBills.forEach(b => { saleHtml += `<div class="summary-item"><span>${b.name}</span><span>₹${b.amount}</span></div>`; saleTotal += b.amount; });
-    document.getElementById('cap-sale-list').innerHTML = saleHtml || '<div style="color:#444; text-align:center; padding:10px">No Sales</div>';
-    document.getElementById('cap-sale-total').innerText = saleTotal;
-
-    let payHtml = '', payTotal = 0;
-    dayPays.forEach(p => { payHtml += `<div class="summary-item"><span>${p.name}</span><span>₹${p.amount}</span></div>`; payTotal += p.amount; });
-    document.getElementById('cap-pay-list').innerHTML = payHtml || '<div style="color:#444; text-align:center; padding:10px">No Payments</div>';
-    document.getElementById('cap-pay-total').innerText = payTotal;
-
-    closeReportModal();
-    msg("Generating Image...");
+    let sH = '', sT = 0, pH = '', pT = 0;
+    dayBills.forEach(b => { sH += `<div class="summary-item"><span>${b.name}</span><span>₹${b.amount}</span></div>`; sT += b.amount; });
+    dayPays.forEach(p => { pH += `<div class="summary-item"><span>${p.name}</span><span>₹${p.amount}</span></div>`; pT += p.amount; });
+    document.getElementById('cap-sale-list').innerHTML = sH || '<div style="color:#444;text-align:center;padding:10px">No Sales</div>';
+    document.getElementById('cap-pay-list').innerHTML = pH || '<div style="color:#444;text-align:center;padding:10px">No Payments</div>';
+    document.getElementById('cap-sale-total').innerText = sT;
+    document.getElementById('cap-pay-total').innerText = pT;
+    closeReportModal(); msg("Generating Image...");
     html2canvas(document.getElementById('summary-capture')).then(canvas => {
         const link = document.createElement('a');
         link.download = `Report_${targetDate}.png`;
@@ -269,9 +265,7 @@ function generateSpecificReport(offset) {
 }
 
 function openEdit(id) {
-    editingId = id;
-    const t = db.t.find(x => x.id === id);
-    if(!t) return;
+    editingId = id; const t = db.t.find(x => x.id === id); if(!t) return;
     document.getElementById('editA').value = t.amount;
     document.getElementById('editR').value = t.remarks || '';
     document.getElementById('editD').value = t.date;
@@ -280,21 +274,17 @@ function openEdit(id) {
 function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
 async function saveEdit() {
-    const idx = db.t.findIndex(x => x.id === editingId);
-    if(idx === -1) return;
+    const idx = db.t.findIndex(x => x.id === editingId); if(idx === -1) return;
     db.t[idx].amount = parseFloat(document.getElementById('editA').value);
     db.t[idx].remarks = document.getElementById('editR').value;
     db.t[idx].date = document.getElementById('editD').value;
-    db.t[idx].synced = false;
-    saveL(); drawR(); updateS(); closeModal();
+    db.t[idx].synced = false; saveL(); drawR(); updateS(); closeModal();
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) }).then(() => autoSync());
 }
 
 async function deleteTxn() {
-    const idx = db.t.findIndex(x => x.id === editingId);
-    if(idx === -1) return;
-    const delId = db.t[idx].id;
-    db.t.splice(idx, 1);
+    const idx = db.t.findIndex(x => x.id === editingId); if(idx === -1) return;
+    const delId = db.t[idx].id; db.t.splice(idx, 1);
     saveL(); drawR(); updateS(); closeModal();
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: delId }) }).then(() => autoSync());
 }
@@ -330,6 +320,7 @@ async function sub() {
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r, synced: false };
     db.t.push(tx); saveL(); drawR(); updateS();
     document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
+    document.getElementById('rem-wrap').style.display = 'none'; document.getElementById('rem-toggle').style.display = 'inline-block';
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => autoSync());
 }
 
@@ -337,6 +328,7 @@ async function handleNewClient() {
     const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local", d = getD();
     if(!n || db.c[n]) return msg("Client Exists");
     db.c[n] = { joined: d, city: c }; saveL(); updateS();
+    document.getElementById('newCustName').value = ''; document.getElementById('newCustCity').value = '';
     tab('home', document.querySelectorAll('.tab')[0]);
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => autoSync());
 }
@@ -348,8 +340,7 @@ function drawB(q = '') {
         const city = db.c[n].city || "Local", bal = db.t.filter(t => t.name === n).reduce((s, t) => s + (t.type==='bill' ? t.amount : (t.type==='pay' ? -t.amount : 0)), 0);
         if(n.toLowerCase().includes(query) || city.toLowerCase().includes(query)) {
             if(!cities[city]) cities[city] = { total: 0, items: [] };
-            cities[city].items.push({ name: n, bal });
-            cities[city].total += bal;
+            cities[city].items.push({ name: n, bal }); cities[city].total += bal;
         }
     });
     let html = '';
@@ -373,16 +364,13 @@ function toggleH(e, name) {
     const id = "h-" + name.replace(/\s/g,'_'), el = document.getElementById(id);
     if(el.style.display === 'block') { el.style.display = 'none'; return; }
     document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
-    
     const allTxns = db.t.filter(t => t.name === name && t.type !== 'join').sort((a,b) => a.id - b.id);
     let running = 0;
     const historyData = allTxns.map(t => {
         running += (t.type === 'bill' ? t.amount : -t.amount);
         return { ...t, runningBal: running };
     });
-
-    const displayTxns = historyData.reverse().slice(0, 15);
-
+    const displayTxns = [...historyData].reverse().slice(0, 15);
     el.innerHTML = displayTxns.map(t => {
         const d = String(t.date).split('T')[0].split('-').reverse().join('/');
         const color = t.type === 'bill' ? 'var(--red)' : 'var(--grn)';
@@ -394,17 +382,44 @@ function toggleH(e, name) {
         </div>`;
     }).join('') + `
     <div class="copy-group">
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 30, 'Monthly')">COPY MONTHLY</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 7, 'Weekly')">WEEKLY (7D)</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 14, 'Bi-Weekly')">2-WEEKS (14D)</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 30, 'Monthly')">MONTHLY (30D)</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 90, 'Quarterly')">QTRLY (90D)</button>
     </div>`;
     el.style.display = 'block';
 }
 
 function copyPeriod(name, days, label) {
-    const txns = db.t.filter(t => t.name === name && t.type !== 'join');
-    const totalBal = txns.reduce((s, t) => s + (t.type==='bill' ? t.amount : (t.type==='pay' ? -t.amount : 0)), 0);
-    const txt = `📋 *Summary: ${name}*\n🚩 *Balance Due: ₹${Math.round(totalBal)}*\n_Generated via LedgerPro_`;
-    const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    msg(`Summary Copied!`);
+    const today = new Date();
+    const cutoffDate = new Date(today.getTime() - (days * 86400000));
+    const allTxns = db.t.filter(t => t.name === name && t.type !== 'join').sort((a,b) => a.id - b.id);
+    
+    let lastBalance = 0;
+    let periodLines = [];
+    let currentBalance = 0;
+
+    allTxns.forEach(t => {
+        const txDate = new Date(t.date);
+        const amount = (t.type === 'bill' ? t.amount : -t.amount);
+        
+        if (txDate < cutoffDate) {
+            lastBalance += amount;
+        } else {
+            const d = t.date.split('-').reverse().slice(0, 2).join('/');
+            const typeLabel = t.type === 'bill' ? 'bill' : 'cash';
+            periodLines.push(`${d} ${typeLabel}: ${t.amount}`);
+        }
+        currentBalance += amount;
+    });
+
+    let finalStr = `📋 *Statement: ${name}*\n`;
+    finalStr += `Last balance: ₹${Math.round(lastBalance)}\n`;
+    finalStr += periodLines.join('\n');
+    finalStr += `\nFinal amount: ₹${Math.round(currentBalance)}`;
+
+    const ta = document.createElement("textarea"); ta.value = finalStr; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    msg(`${label} Statement Copied!`);
 }
 
 function updateS() {
