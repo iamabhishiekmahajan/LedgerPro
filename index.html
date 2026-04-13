@@ -38,8 +38,8 @@
         .modal-content { background: var(--surf); border: 1px solid var(--bord); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; }
 
         .history-pane { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--bord); }
-        .copy-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .copy-btn { padding: 10px 4px; background: #1c1c28; color: var(--acc); border: 1px solid var(--bord); border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+        .copy-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; background: #1a1a25; padding: 10px; border-radius: 8px; }
+        .copy-btn { padding: 10px 4px; background: var(--surf); color: var(--acc); border: 1px solid var(--bord); border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
 
         .run-bal { font-size: 10px; font-weight: 500; display: block; margin-top: 2px; }
 
@@ -54,7 +54,7 @@
         .auto-item { padding: 12px; border-bottom: 1px solid var(--bord); color: var(--txt); }
         
         .btn-opt { background: #1c1c28; border: 1px solid var(--bord); color: #fff; padding: 14px; border-radius: 10px; width: 100%; text-align: left; margin-bottom: 10px; font-weight: 600; cursor: pointer; }
-        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 9999; display: none; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 800; z-index: 9999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.6); text-align: center; min-width: 200px; border: 2px solid #000; }
         
         .sync-indicator { position: fixed; bottom: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: #444; transition: 0.3s; z-index: 100; }
         .sync-indicator.syncing { background: var(--acc); box-shadow: 0 0 10px var(--acc); }
@@ -68,7 +68,6 @@
 <div id="ptr">Pull down to Sync...</div>
 <div id="sync-indicator" class="sync-indicator"></div>
 
-<!-- Off-screen Capture -->
 <div id="summary-capture">
     <div class="summary-header">
         <h2 style="color: var(--acc); margin:0">Daily Business Summary</h2>
@@ -98,7 +97,7 @@
 </div>
 
 <div id="edit-modal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" onclick="event.stopPropagation()">
         <h3 style="margin-bottom:15px; font-size:16px;">Edit Transaction</h3>
         <input id="editA" type="number" placeholder="Amount (₹)">
         <input id="editR" placeholder="Remarks">
@@ -152,7 +151,7 @@
         <div style="flex:1"><small style="color:var(--mut)">DUE</small><div id="tD" style="color:var(--red); font-weight:800">₹0</div></div>
         <div style="flex:1"><small style="color:var(--mut)">CLIENTS</small><div id="tC" style="font-weight:800">0</div></div>
     </div>
-    <input placeholder="Search name or city..." oninput="drawB(this.value)">
+    <input id="bookSearch" placeholder="Search name or city..." oninput="drawB(this.value)">
     <div id="bList"></div>
 </div>
 
@@ -161,13 +160,16 @@
     <div class="card">
         <h3 style="color:var(--acc); margin-bottom:15px; font-size:14px;">Add New Client</h3>
         <input id="newCustName" placeholder="Full Name">
-        <input id="newCustCity" placeholder="City (Default: Local)">
+        <div style="position:relative;">
+            <input id="newCustCity" placeholder="City (Default: Local)" oninput="autoCity('newCustCity', 'autoCityList')" autocomplete="off">
+            <div id="autoCityList" class="autocomplete" style="display:none"></div>
+        </div>
         <button class="btn-sub" style="background:var(--acc); color:#000;" onclick="handleNewClient()">REGISTER</button>
     </div>
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEVUXPtb58BxN4rL0cK0lmUDym4xEVckx4uRo6gRt-VjJypqi3l35uqs79f0dNvA7c/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHDEi_3-0oaLvlPqM3tJdDcMLCdOvr3DNRdl-DDOcAJu_oCJrLCrukhRycnN6nBcwY/exec";
 let db = JSON.parse(localStorage.getItem('lp_d') || '{"c":{},"t":[],"p":[]}'), curT = '', editingId = null;
 
 const getD = (offset = 0) => {
@@ -205,7 +207,7 @@ async function pull() {
                 db.t = d.txns.map(t => ({...t, date: String(t.date).split('T')[0], synced: true}));
                 db.c = d.customers || {};
                 saveL(); drawR(); updateS();
-                if(document.getElementById('sec-books').classList.contains('active')) drawB();
+                if(document.getElementById('sec-books').classList.contains('active')) drawB(document.getElementById('bookSearch').value);
             }
             res();
         };
@@ -221,7 +223,7 @@ function tab(n, b) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('sec-' + n).classList.add('active');
     if(b) b.classList.add('active');
-    if(n === 'books') drawB();
+    if(n === 'books') drawB(document.getElementById('bookSearch').value);
 }
 
 function setT(t) {
@@ -278,15 +280,31 @@ async function saveEdit() {
     db.t[idx].amount = parseFloat(document.getElementById('editA').value);
     db.t[idx].remarks = document.getElementById('editR').value;
     db.t[idx].date = document.getElementById('editD').value;
-    db.t[idx].synced = false; saveL(); drawR(); updateS(); closeModal();
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) }).then(() => autoSync());
+    db.t[idx].synced = false; 
+    saveL(); drawR(); updateS(); 
+    if(document.getElementById('sec-books').classList.contains('active')) drawB(document.getElementById('bookSearch').value);
+    closeModal();
+    msg("Updating...");
+    fetch(SCRIPT_URL, { 
+      method: 'POST', 
+      mode: 'no-cors', 
+      body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) 
+    }).then(() => { autoSync(); msg("Updated!"); });
 }
 
 async function deleteTxn() {
     const idx = db.t.findIndex(x => x.id === editingId); if(idx === -1) return;
-    const delId = db.t[idx].id; db.t.splice(idx, 1);
-    saveL(); drawR(); updateS(); closeModal();
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: delId }) }).then(() => autoSync());
+    const delId = db.t[idx].id; 
+    db.t.splice(idx, 1);
+    saveL(); drawR(); updateS(); 
+    if(document.getElementById('sec-books').classList.contains('active')) drawB(document.getElementById('bookSearch').value);
+    closeModal();
+    msg("Deleting...");
+    fetch(SCRIPT_URL, { 
+      method: 'POST', 
+      mode: 'no-cors', 
+      body: JSON.stringify({ action: 'deleteTxn', id: delId }) 
+    }).then(() => { autoSync(); msg("Deleted!"); });
 }
 
 function drawR() {
@@ -298,13 +316,14 @@ function drawR() {
         html += `<div class="txn-item">
             <div><b>${t.name}</b> ${t.synced ? '✅' : '⚠️'}<br><small style="color:var(--mut)">${t.remarks||''}</small></div>
             <div style="display:flex; align-items:center; font-weight:800; color:${t.type==='bill'?'var(--red)':'var(--grn)'}">
-                ₹${t.amount} <span class="edit-ico" onclick="openEdit(${t.id})">📝</span>
+                ₹${t.amount} <span class="edit-ico" onclick="event.stopPropagation(); openEdit(${t.id})">📝</span>
             </div>
         </div>`;
     });
     l.innerHTML = html || '<div style="text-align:center; padding:40px; color:var(--mut)">No transactions yet.</div>';
 }
 
+// Autocomplete for Customer Names
 function autoC(inId, auId) {
     const v = document.getElementById(inId).value.toLowerCase(), a = document.getElementById(auId);
     if(!v) { a.style.display='none'; return; }
@@ -312,7 +331,21 @@ function autoC(inId, auId) {
     a.innerHTML = m.map(n => `<div class="auto-item" onclick="sel('${n.replace(/'/g,"\\'")}','${inId}','${auId}')">${n} <small>(${db.c[n].city})</small></div>`).join('');
     a.style.display = m.length ? 'block' : 'none';
 }
-function sel(n, inId, auId) { document.getElementById(inId).value = n; document.getElementById(auId).style.display = 'none'; }
+
+// Autocomplete for Cities
+function autoCity(inId, auId) {
+    const v = document.getElementById(inId).value.toLowerCase(), a = document.getElementById(auId);
+    if(!v) { a.style.display='none'; return; }
+    
+    // Get unique cities from the customer database
+    const cities = [...new Set(Object.values(db.c).map(cust => cust.city))];
+    const m = cities.filter(city => city && city.toLowerCase().includes(v));
+    
+    a.innerHTML = m.map(city => `<div class="auto-item" onclick="sel('${city.replace(/'/g,"\\'")}','${inId}','${auId}')">${city}</div>`).join('');
+    a.style.display = m.length ? 'block' : 'none';
+}
+
+function sel(val, inId, auId) { document.getElementById(inId).value = val; document.getElementById(auId).style.display = 'none'; }
 
 async function sub() {
     const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
@@ -321,15 +354,23 @@ async function sub() {
     db.t.push(tx); saveL(); drawR(); updateS();
     document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
     document.getElementById('rem-wrap').style.display = 'none'; document.getElementById('rem-toggle').style.display = 'inline-block';
+    
+    const label = curT === 'bill' ? 'Bill' : 'Payment';
+    msg(`${label} ₹${a} added successfully!`);
+    
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => autoSync());
 }
 
 async function handleNewClient() {
     const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local", d = getD();
-    if(!n || db.c[n]) return msg("Client Exists");
+    if(!n) return msg("Name required");
+    if(db.c[n]) return msg("Customer Name must be unique!");
     db.c[n] = { joined: d, city: c }; saveL(); updateS();
     document.getElementById('newCustName').value = ''; document.getElementById('newCustCity').value = '';
-    tab('home', document.querySelectorAll('.tab')[0]);
+    
+    msg(`Customer ${n} added successfully!`);
+    
+    setTimeout(() => { tab('home', document.querySelectorAll('.tab')[0]); }, 1000);
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => autoSync());
 }
 
@@ -364,6 +405,7 @@ function toggleH(e, name) {
     const id = "h-" + name.replace(/\s/g,'_'), el = document.getElementById(id);
     if(el.style.display === 'block') { el.style.display = 'none'; return; }
     document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
+    
     const allTxns = db.t.filter(t => t.name === name && t.type !== 'join').sort((a,b) => a.id - b.id);
     let running = 0;
     const historyData = allTxns.map(t => {
@@ -371,22 +413,28 @@ function toggleH(e, name) {
         return { ...t, runningBal: running };
     });
     const displayTxns = [...historyData].reverse().slice(0, 15);
-    el.innerHTML = displayTxns.map(t => {
+    
+    let paneHtml = `
+    <div class="copy-group">
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 7, 'Weekly')">WEEKLY (7D)</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 14, 'Bi-Weekly')">2-WEEKS (14D)</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 30, 'Monthly')">MONTHLY (30D)</button>
+        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 90, 'Quarterly')">QTRLY (90D)</button>
+    </div>
+    <div style="font-size:10px; color:var(--mut); margin-bottom:5px; padding-left:5px;">RECENT TRANSACTIONS</div>`;
+
+    paneHtml += displayTxns.map(t => {
         const d = String(t.date).split('T')[0].split('-').reverse().join('/');
         const color = t.type === 'bill' ? 'var(--red)' : 'var(--grn)';
         const runColor = t.runningBal >= 0 ? 'var(--red)' : 'var(--grn)';
         return `<div class="txn-item" style="font-size:11px; align-items: flex-start;">
             <div style="flex:1"><small style="color:var(--mut)">${d}</small><br><span>${t.remarks || (t.type === 'bill' ? 'Sale' : 'Payment')}</span></div>
             <div style="text-align:right; margin-right: 5px;"><b style="color:${color}">${t.type === 'bill' ? '+' : '-'}₹${t.amount}</b><span class="run-bal" style="color:${runColor}">Bal: ₹${Math.round(Math.abs(t.runningBal))}</span></div>
-            <span class="edit-ico" onclick="openEdit(${t.id})">📝</span>
+            <span class="edit-ico" onclick="event.stopPropagation(); openEdit(${t.id})">📝</span>
         </div>`;
-    }).join('') + `
-    <div class="copy-group">
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 7, 'Weekly')">WEEKLY (7D)</button>
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 14, 'Bi-Weekly')">2-WEEKS (14D)</button>
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 30, 'Monthly')">MONTHLY (30D)</button>
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 90, 'Quarterly')">QTRLY (90D)</button>
-    </div>`;
+    }).join('');
+
+    el.innerHTML = paneHtml;
     el.style.display = 'block';
 }
 
@@ -413,8 +461,7 @@ function copyPeriod(name, days, label) {
         currentBalance += amount;
     });
 
-    let finalStr = `📋 *Statement: ${name}*\n`;
-    finalStr += `Last balance: ₹${Math.round(lastBalance)}\n`;
+    let finalStr = `Last balance: ₹${Math.round(lastBalance)}\n`;
     finalStr += periodLines.join('\n');
     finalStr += `\nFinal amount: ₹${Math.round(currentBalance)}`;
 
@@ -432,7 +479,12 @@ function updateS() {
     document.getElementById('tC').innerText = Object.keys(db.c).length;
 }
 
-function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+function msg(m) { 
+    const t = document.getElementById('toast'); 
+    t.innerText = m; 
+    t.style.display = 'block'; 
+    setTimeout(() => t.style.display = 'none', 1000); 
+}
 
 function initPTR() {
     let sY = 0, dist = 0; const ptr = document.getElementById('ptr');
@@ -448,7 +500,12 @@ function initPTR() {
     });
 }
 
-function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.modal-content')) document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none'); }
+function closeAllPanes(e) { 
+    if(!e.target.closest('.card') && !e.target.closest('.modal-content') && !e.target.closest('.autocomplete')) {
+        document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.autocomplete').forEach(a => a.style.display = 'none');
+    } 
+}
 window.onload = init;
 </script>
 </body>
