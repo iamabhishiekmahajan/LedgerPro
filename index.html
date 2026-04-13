@@ -10,7 +10,8 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--txt); padding-bottom: 60px; font-size: 14px; overflow-x: hidden; touch-action: pan-y; }
         
-        #ptr { text-align: center; height: 0; overflow: hidden; transition: height 0.2s; color: var(--acc); font-size: 12px; display: flex; align-items: center; justify-content: center; background: var(--surf); }
+        /* Pull to Refresh Styling */
+        #ptr { text-align: center; height: 0; overflow: hidden; transition: height 0.2s; color: var(--acc); font-size: 12px; display: flex; align-items: center; justify-content: center; background: var(--surf); border-bottom: 1px solid var(--bord); }
         
         .nav { position: sticky; top: 0; z-index: 99; background: rgba(10,10,15,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--bord); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; gap: 5px; }
@@ -31,57 +32,76 @@
         .btn-sub { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 800; margin-top: 5px; cursor: pointer; transition: 0.2s; }
         
         .txn-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a3a55; }
-        .edit-link { font-size: 10px; color: var(--acc); margin-left: 10px; border: 1px solid var(--bord); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; cursor: pointer; }
+        .edit-ico { font-size: 12px; margin-left: 8px; opacity: 0.6; cursor: pointer; }
         
         .date-group { background: #1c1c28; padding: 5px 10px; font-size: 10px; font-weight: 800; color: var(--mut); border-radius: 4px; margin: 15px 0 8px 0; text-transform: uppercase; }
         
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
         .modal-content { background: var(--surf); border: 1px solid var(--bord); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; }
 
+        /* Report Capture Styling (Hidden from view) */
         #summary-capture { position: absolute; left: -9999px; top: 0; width: 500px; background: #0a0a0f; color: white; padding: 30px; border: 4px solid var(--acc); }
         .summary-header { text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .summary-col { background: #13131a; border: 1px solid #2a2a3a; padding: 15px; border-radius: 12px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #ffffff11; padding-bottom: 4px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #ffffff11; padding-bottom: 4px; }
+        .summary-total { margin-top: 10px; padding-top: 5px; border-top: 1px solid var(--bord); font-weight: 800; display: flex; justify-content: space-between; font-size: 14px; }
 
         .autocomplete { position: absolute; background: #1c1c28; border: 1px solid var(--acc); width: 100%; z-index: 100; border-radius: 8px; max-height: 150px; overflow-y: auto; top: 50px; }
         .auto-item { padding: 12px; border-bottom: 1px solid var(--bord); color: var(--txt); }
-        .city-header { margin-top: 15px; border-bottom: 1px solid var(--bord); padding-bottom: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; color: var(--acc); font-weight: 800; font-size: 11px; text-transform: uppercase; }
-        .history-pane { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--bord); display: none; }
         
-        .share-tools { display: flex; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bord); }
-        .share-btn { flex: 1; padding: 6px; font-size: 9px; font-weight: 800; border-radius: 4px; border: 1px solid var(--bord); background: #1c1c28; color: var(--txt); cursor: pointer; }
-        
-        #loader { position:fixed; inset:0; background:var(--bg); z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 999; display: none; }
+        .btn-opt { background: #1c1c28; border: 1px solid var(--bord); color: #fff; padding: 14px; border-radius: 10px; width: 100%; text-align: left; margin-bottom: 10px; font-weight: 600; cursor: pointer; }
+        .btn-opt:active { background: var(--acc); color: #000; }
+
+        #loader { position:fixed; inset:0; background:var(--bg); z-index:5000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 9999; display: none; }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
 
 <div id="loader">
     <div style="font-size: 24px; margin-bottom: 10px;">Ledger<span style="color:var(--acc)">Pro</span></div>
-    <div style="font-size: 12px; color: var(--mut)">Cloud Syncing...</div>
+    <div style="font-size: 12px; color: var(--mut)">Connecting Cloud...</div>
 </div>
 
+<!-- PTR Component -->
 <div id="ptr">Pull down to Refresh...</div>
 
-<!-- Image Summary Capture Area (Hidden) -->
+<!-- Report Generation Hidden Area -->
 <div id="summary-capture">
     <div class="summary-header">
-        <h2 style="color: var(--acc); margin:0">Daily Ledger Report</h2>
-        <div id="summary-date-label" style="font-size: 12px; color: #888;"></div>
+        <h2 style="color: var(--acc); margin:0">Daily Business Summary</h2>
+        <div id="summary-date-label" style="font-size: 14px; color: #888; margin-top: 5px;"></div>
     </div>
     <div class="summary-grid">
         <div class="summary-col">
-            <h4 style="color:var(--red); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">TOTAL BILLS (3 DAYS)</h4>
-            <div id="sale-summary-list"></div>
+            <h4 style="color:var(--red); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">BILLS (SALE)</h4>
+            <div id="cap-sale-list"></div>
+            <div class="summary-total" style="color:var(--red)">Total: <span id="cap-sale-total">0</span></div>
         </div>
         <div class="summary-col">
-            <h4 style="color:var(--grn); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">PAYMENTS (TODAY)</h4>
-            <div id="pay-summary-list"></div>
+            <h4 style="color:var(--grn); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">CASH (PAYMENT)</h4>
+            <div id="cap-pay-list"></div>
+            <div class="summary-total" style="color:var(--grn)">Total: <span id="cap-pay-total">0</span></div>
         </div>
     </div>
-    <div style="margin-top: 20px; text-align: center; font-size: 10px; color: #555;">Generated via LedgerPro Advanced</div>
+    <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #444; border-top: 1px solid #222; padding-top: 10px;">
+        Generated by LedgerPro Advanced Accountant
+    </div>
+</div>
+
+<!-- Report Selection Modal -->
+<div id="report-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom:15px; font-size:16px; color: var(--acc)">Save Daily Report</h3>
+        <p style="font-size: 12px; color: var(--mut); margin-bottom: 20px;">Select a date to generate the image summary:</p>
+        
+        <button class="btn-opt" onclick="generateSpecificReport(0)">📅 Today</button>
+        <button class="btn-opt" onclick="generateSpecificReport(1)">📅 Yesterday</button>
+        <button class="btn-opt" id="btn-day-before" onclick="generateSpecificReport(2)">📅 Day Before</button>
+        
+        <button class="btn-sub" style="background:transparent; color:var(--mut); margin-top:10px;" onclick="closeReportModal()">CLOSE</button>
+    </div>
 </div>
 
 <!-- Edit Modal -->
@@ -105,7 +125,7 @@
         <button class="tab active" onclick="tab('home',this)">HOME</button>
         <button class="tab" onclick="tab('books',this)">BOOKS</button>
         <button class="tab" onclick="tab('add',this)">+ CLIENT</button>
-        <button onclick="generateImageSummary()" style="background:none; border:none; color:var(--acc); font-size:20px; margin-left:10px; cursor:pointer;" title="Download Summary Image">🖼️</button>
+        <button onclick="openReportModal()" style="background:none; border:none; color:var(--acc); font-size:22px; margin-left:10px; cursor:pointer;" title="Download Report">🖼️</button>
     </div>
 </nav>
 
@@ -152,7 +172,9 @@
 </div>
 
 <script>
+// Replace with your Web App URL from Google Sheets
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEVUXPtb58BxN4rL0cK0lmUDym4xEVckx4uRo6gRt-VjJypqi3l35uqs79f0dNvA7c/exec";
+
 let db = JSON.parse(localStorage.getItem('lp_d') || '{"c":{},"t":[],"p":[]}'), curT = '', editingId = null;
 
 const getD = (offsetDays = 0) => {
@@ -167,9 +189,10 @@ async function init() {
     drawR(); updateS();
     await pull(); 
     document.getElementById('loader').style.display='none';
-    initPTR();
+    initPTR(); // Start the pull-down listener
 }
 
+// FETCH DATA FROM CLOUD
 async function pull() {
     return new Promise((res) => {
         const c = 'cb'+Date.now();
@@ -211,6 +234,51 @@ function tglR() {
     r.style.display = r.style.display === 'none' ? 'block' : 'none';
 }
 
+// Report Modal Logic
+function openReportModal() {
+    const d2 = getD(2).split('-').reverse().join('/');
+    document.getElementById('btn-day-before').innerText = `📅 ${d2}`;
+    document.getElementById('report-modal').style.display = 'flex';
+}
+function closeReportModal() { document.getElementById('report-modal').style.display = 'none'; }
+
+function generateSpecificReport(offset) {
+    const targetDate = getD(offset);
+    const dayBills = db.t.filter(t => t.date === targetDate && t.type === 'bill');
+    const dayPays = db.t.filter(t => t.date === targetDate && t.type === 'pay');
+    
+    document.getElementById('summary-date-label').innerText = targetDate.split('-').reverse().join('/');
+    
+    let saleHtml = '', saleTotal = 0;
+    dayBills.forEach(b => {
+        saleHtml += `<div class="summary-item"><span>${b.name}</span><span>₹${b.amount}</span></div>`;
+        saleTotal += b.amount;
+    });
+    document.getElementById('cap-sale-list').innerHTML = saleHtml || '<div style="font-size:10px; color:#444; text-align:center; padding:10px">No Sales</div>';
+    document.getElementById('cap-sale-total').innerText = saleTotal;
+
+    let payHtml = '', payTotal = 0;
+    dayPays.forEach(p => {
+        payHtml += `<div class="summary-item"><span>${p.name}</span><span>₹${p.amount}</span></div>`;
+        payTotal += p.amount;
+    });
+    document.getElementById('cap-pay-list').innerHTML = payHtml || '<div style="font-size:10px; color:#444; text-align:center; padding:10px">No Payments</div>';
+    document.getElementById('cap-pay-total').innerText = payTotal;
+
+    closeReportModal();
+    msg("Generating Image...");
+
+    const capture = document.getElementById('summary-capture');
+    html2canvas(capture).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Report_${targetDate}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        msg("Report Saved!");
+    });
+}
+
+// Edit Modal Functions
 function openEdit(id) {
     editingId = id;
     const t = db.t.find(x => x.id === id);
@@ -220,99 +288,28 @@ function openEdit(id) {
     document.getElementById('editD').value = t.date;
     document.getElementById('edit-modal').style.display = 'flex';
 }
-
 function closeModal() { document.getElementById('edit-modal').style.display = 'none'; editingId = null; }
 
 async function saveEdit() {
     const idx = db.t.findIndex(x => x.id === editingId);
     if(idx === -1) return;
-    const amt = parseFloat(document.getElementById('editA').value);
-    const rem = document.getElementById('editR').value;
-    const dat = document.getElementById('editD').value;
-    
-    db.t[idx].amount = amt;
-    db.t[idx].remarks = rem;
-    db.t[idx].date = dat;
+    db.t[idx].amount = parseFloat(document.getElementById('editA').value);
+    db.t[idx].remarks = document.getElementById('editR').value;
+    db.t[idx].date = document.getElementById('editD').value;
     db.t[idx].synced = false;
-    
     saveL(); drawR(); updateS(); closeModal();
-    msg("Updating...");
+    msg("Updating Cloud...");
     fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) }).then(() => pull());
 }
 
 async function deleteTxn() {
     const idx = db.t.findIndex(x => x.id === editingId);
     if(idx === -1) return;
-    const txnToDelete = db.t[idx];
+    const delId = db.t[idx].id;
     db.t.splice(idx, 1);
     saveL(); drawR(); updateS(); closeModal();
     msg("Deleting...");
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: txnToDelete.id }) }).then(() => pull());
-}
-
-function autoC(inId, auId) {
-    const v = document.getElementById(inId).value.toLowerCase(), a = document.getElementById(auId);
-    if(!v) { a.style.display='none'; return; }
-    const m = Object.keys(db.c).filter(n => n.toLowerCase().includes(v));
-    a.innerHTML = m.map(n => `<div class="auto-item" onclick="sel('${n.replace(/'/g,"\\'")}','${inId}','${auId}')">${n} <small>(${db.c[n].city})</small></div>`).join('');
-    a.style.display = m.length ? 'block' : 'none';
-}
-
-function sel(n, inId, auId) { document.getElementById(inId).value = n; document.getElementById(auId).style.display = 'none'; }
-
-async function handleNewClient() {
-    const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local", d = getD();
-    if(!n || db.c[n]) return msg("Error");
-    db.c[n] = { joined: d, city: c };
-    saveL(); updateS(); msg("Registered!");
-    tab('home', document.querySelectorAll('.tab')[0]);
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => pull());
-}
-
-async function sub() {
-    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
-    if(!n || !a || !db.c[n]) return msg("Check Input");
-    const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r, synced: false };
-    db.t.push(tx);
-    saveL(); drawR(); updateS(); msg("Added!");
-    document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => pull());
-}
-
-function generateImageSummary() {
-    const today = getD();
-    const yesterday = getD(1);
-    const dayBefore = getD(2);
-    
-    // Left Side Calculations (Sales Only)
-    const saleToday = db.t.filter(t => t.date === today && t.type === 'bill').reduce((s,t) => s + t.amount, 0);
-    const saleYest = db.t.filter(t => t.date === yesterday && t.type === 'bill').reduce((s,t) => s + t.amount, 0);
-    const saleBefore = db.t.filter(t => t.date === dayBefore && t.type === 'bill').reduce((s,t) => s + t.amount, 0);
-    
-    // Right Side (Today's Payments with Names)
-    const payToday = db.t.filter(t => t.date === today && t.type === 'pay');
-    
-    document.getElementById('summary-date-label').innerText = today.split('-').reverse().join('/');
-    
-    document.getElementById('sale-summary-list').innerHTML = `
-        <div class="summary-item"><span>Today (Sale):</span><span>₹${saleToday}</span></div>
-        <div class="summary-item"><span>Yesterday (Sale):</span><span>₹${saleYest}</span></div>
-        <div class="summary-item"><span>${dayBefore.split('-').reverse().join('/')} (Sale):</span><span>₹${saleBefore}</span></div>
-    `;
-    
-    document.getElementById('pay-summary-list').innerHTML = payToday.length > 0 ? 
-        payToday.map(p => `<div class="summary-item"><span>${p.name}:</span><span>₹${p.amount}</span></div>`).join('') :
-        `<div style="font-size:10px; color:#555; text-align:center; padding-top:10px">No payments today</div>`;
-        
-    msg("Preparing Image...");
-    const capture = document.getElementById('summary-capture');
-    html2canvas(capture).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `LedgerPro_Report_${today}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        msg("Report Saved!");
-    });
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: delId }) }).then(() => pull());
 }
 
 function drawR() {
@@ -322,20 +319,43 @@ function drawR() {
         const d = String(t.date).split('T')[0];
         if(d !== lastD) { html += `<div class="date-group">${d === today ? "Today" : d.split('-').reverse().join('/')}</div>`; lastD = d; }
         const st = t.synced ? '✅' : '⚠️';
-        html += `
-        <div class="txn-item">
+        html += `<div class="txn-item">
             <div>
                 <b>${t.name}</b> ${st} 
-                <span class="edit-link" onclick="openEdit(${t.id})">Edit</span>
-                <br>
-                <small style="color:var(--mut)">${t.remarks||''}</small>
+                <br><small style="color:var(--mut)">${t.remarks||''}</small>
             </div>
-            <div style="color:${t.type==='bill'?'var(--red)':'var(--grn)'}; font-weight:800">
-                ₹${t.amount}
+            <div style="display:flex; align-items:center; font-weight:800; color:${t.type==='bill'?'var(--red)':'var(--grn)'}">
+                ₹${t.amount} <span class="edit-ico" onclick="openEdit(${t.id})">📝</span>
             </div>
         </div>`;
     });
     l.innerHTML = html || '<div style="text-align:center; padding:40px; color:var(--mut)">No transactions yet.</div>';
+}
+
+function autoC(inId, auId) {
+    const v = document.getElementById(inId).value.toLowerCase(), a = document.getElementById(auId);
+    if(!v) { a.style.display='none'; return; }
+    const m = Object.keys(db.c).filter(n => n.toLowerCase().includes(v));
+    a.innerHTML = m.map(n => `<div class="auto-item" onclick="sel('${n.replace(/'/g,"\\'")}','${inId}','${auId}')">${n} <small>(${db.c[n].city})</small></div>`).join('');
+    a.style.display = m.length ? 'block' : 'none';
+}
+function sel(n, inId, auId) { document.getElementById(inId).value = n; document.getElementById(auId).style.display = 'none'; }
+
+async function sub() {
+    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
+    if(!n || !a || !db.c[n]) return msg("Check Customer Name");
+    const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r, synced: false };
+    db.t.push(tx); saveL(); drawR(); updateS(); msg("Added!");
+    document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => pull());
+}
+
+async function handleNewClient() {
+    const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local", d = getD();
+    if(!n || db.c[n]) return msg("Client Already Exists");
+    db.c[n] = { joined: d, city: c }; saveL(); updateS(); msg("Registered!");
+    tab('home', document.querySelectorAll('.tab')[0]);
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => pull());
 }
 
 function drawB(q = '') {
@@ -352,7 +372,7 @@ function drawB(q = '') {
     const sortedCities = Object.keys(cities).sort((a, b) => cities[b].total - cities[a].total);
     let html = '';
     sortedCities.forEach(cName => {
-        html += `<div class="city-header"><span>${cName}</span><span>₹${Math.round(cities[cName].total)}</span></div>`;
+        html += `<div class="city-header" style="color:var(--acc); font-size:10px; margin:10px 0; border-bottom:1px solid var(--bord)">${cName.toUpperCase()}</div>`;
         cities[cName].items.sort((a,b) => b.bal - a.bal).forEach(x => {
             html += `<div class="card" onclick="toggleH(event, '${x.name.replace(/'/g,"\\'")}')">
                 <div style="display:flex; justify-content:space-between"><b>${x.name}</b><b style="color:${x.bal > 0 ? 'var(--red)' : 'var(--grn)'}">₹${Math.round(x.bal)}</b></div>
@@ -370,36 +390,10 @@ function toggleH(e, name) {
     const hist = db.t.filter(t => t.name === name && t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 15);
     el.innerHTML = hist.map(t => {
         const d = String(t.date).split('T')[0].split('-').reverse().join('/');
-        return `<div class="txn-item" style="font-size:11px"><small>${d} (${t.type.toUpperCase()})</small><span onclick="openEdit(${t.id})" class="edit-link">Edit</span><span>₹${t.amount}</span></div>`;
-    }).join('') + `
-    <div class="share-tools">
-        <button class="share-btn" onclick="copyReport('${name.replace(/'/g,"\\'")}', 7)">WEEKLY</button>
-        <button class="share-btn" onclick="copyReport('${name.replace(/'/g,"\\'")}', 30)">MONTHLY</button>
-        <button class="share-btn" onclick="copyReport('${name.replace(/'/g,"\\'")}', 90)">QUARTERLY</button>
-    </div>`;
+        return `<div class="txn-item" style="font-size:11px"><small>${d} (${t.type.toUpperCase()})</small><span>₹${t.amount}</span></div>`;
+    }).join('') + `<div style="padding-top:10px; border-top:1px solid var(--bord);"><button style="width:100%; padding:8px; background:var(--surf); color:var(--acc); border:1px solid var(--bord); border-radius:6px; font-size:10px;" onclick="copyMonthly('${name.replace(/'/g,"\\'")}')">COPY 30 DAY SUMMARY</button></div>`;
     el.style.display = 'block';
 }
-
-function copyReport(name, days) {
-    const cutoff = getD(days);
-    const allTxns = db.t.filter(t => t.name === name).sort((a,b) => a.id - b.id);
-    let openingBal = 0, recentTxns = [], finalBal = 0;
-    allTxns.forEach(t => {
-        const val = t.type === 'bill' ? t.amount : (t.type === 'pay' ? -t.amount : 0);
-        if (t.date < cutoff) openingBal += val;
-        else if (t.type !== 'join') {
-            const dStr = t.date.split('-').slice(1).reverse().join('/');
-            recentTxns.push(`${dStr} ${t.type==='bill'?'Bill':'Cash'}: ₹${t.amount}`);
-        }
-        finalBal += val;
-    });
-    const period = days === 7 ? "Weekly" : (days === 30 ? "Monthly" : "Quarterly");
-    const msgBody = `*LedgerPro Statement (${period})*\nCustomer: *${name}*\n--------------------------\nLast Balance: ₹${Math.round(openingBal)}\n--------------------------\n${recentTxns.length?recentTxns.join('\n'):"No activity"}\n--------------------------\n*Final Balance: ₹${Math.round(finalBal)}*`;
-    const el = document.createElement('textarea'); el.value = msgBody; document.body.appendChild(el); el.select();
-    document.execCommand('copy'); document.body.removeChild(el); msg("Copied to Clipboard!");
-}
-
-function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.modal-content')) document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none'); }
 
 function updateS() {
     let due = 0;
@@ -411,21 +405,36 @@ function updateS() {
     document.getElementById('tC').innerText = Object.keys(db.c).length;
 }
 
-function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
 
+// PULL TO REFRESH LOGIC
 function initPTR() {
     let sY = 0, dist = 0; const ptr = document.getElementById('ptr');
-    window.addEventListener('touchstart', (e) => { if (window.scrollY === 0) sY = e.touches[0].pageY; }, {passive: true});
+    window.addEventListener('touchstart', (e) => { 
+        if (window.scrollY === 0) sY = e.touches[0].pageY; 
+    }, {passive: true});
+    
     window.addEventListener('touchmove', (e) => {
         if (sY === 0 || window.scrollY > 0) return;
         dist = e.touches[0].pageY - sY;
-        if (dist > 0 && dist < 100) { ptr.style.height = dist + 'px'; ptr.innerText = dist > 60 ? 'Release to Sync 🔄' : 'Pull to Sync...'; }
+        if (dist > 0 && dist < 120) { 
+            ptr.style.height = dist + 'px'; 
+            ptr.innerText = dist > 70 ? 'Release to Sync Cloud 🔄' : 'Pull down to Sync...'; 
+        }
     }, {passive: true});
+    
     window.addEventListener('touchend', async () => {
-        if (dist > 60) { ptr.innerText = 'Syncing...'; ptr.style.height = '40px'; await pull(); msg("Cloud Synced"); }
+        if (dist > 70) { 
+            ptr.innerText = 'Connecting...'; 
+            ptr.style.height = '40px'; 
+            await pull(); 
+            msg("Cloud Data Refreshed!"); 
+        }
         ptr.style.height = '0'; sY = 0; dist = 0;
     });
 }
+
+function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.modal-content')) document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none'); }
 window.onload = init;
 </script>
 </body>
