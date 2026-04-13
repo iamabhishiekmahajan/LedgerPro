@@ -27,7 +27,6 @@
         .t-btn.active.g { background: var(--grn); color: #fff; border-color: var(--grn); }
         
         input { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 8px; padding: 12px; color: #fff; margin-bottom: 10px; font-size: 14px; outline: none; }
-        .plus-btn { display: inline-flex; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--bord); font-weight: 700; cursor: pointer; font-size: 11px; margin-bottom: 10px; color: var(--mut); }
         .btn-sub { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 800; margin-top: 5px; cursor: pointer; transition: 0.2s; }
         
         .txn-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a3a55; }
@@ -56,11 +55,16 @@
         
         .btn-opt { background: #1c1c28; border: 1px solid var(--bord); color: #fff; padding: 14px; border-radius: 10px; width: 100%; text-align: left; margin-bottom: 10px; font-weight: 600; cursor: pointer; }
         .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 9999; display: none; }
+        
+        .sync-indicator { position: fixed; bottom: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: #444; transition: 0.3s; z-index: 100; }
+        .sync-indicator.syncing { background: var(--acc); box-shadow: 0 0 10px var(--acc); }
+        .sync-indicator.success { background: var(--grn); }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
 
 <div id="ptr">Pull down to Sync...</div>
+<div id="sync-indicator" class="sync-indicator"></div>
 
 <div id="summary-capture">
     <div class="summary-header">
@@ -86,7 +90,6 @@
         <h3 style="margin-bottom:15px; font-size:16px; color: var(--acc)">Save Daily Report</h3>
         <button class="btn-opt" onclick="generateSpecificReport(0)">📅 Today</button>
         <button class="btn-opt" onclick="generateSpecificReport(1)">📅 Yesterday</button>
-        <button class="btn-opt" id="btn-day-before" onclick="generateSpecificReport(2)">📅 Day Before</button>
         <button class="btn-sub" style="background:transparent; color:var(--mut); margin-top:10px;" onclick="closeReportModal()">CLOSE</button>
     </div>
 </div>
@@ -128,8 +131,7 @@
             <div id="auto" class="autocomplete" style="display:none"></div>
         </div>
         <input id="iA" type="number" placeholder="Amount (₹)" inputmode="decimal">
-        <div id="pBtn" class="plus-btn" onclick="tglR()">+ Remarks</div>
-        <input id="iR" placeholder="Details (Remarks)" style="display:none">
+        <input id="iR" placeholder="Details (Remarks)">
         <button id="sBtn" class="btn-sub" onclick="sub()">ADD ENTRY</button>
     </div>
     <div id="list"></div>
@@ -164,28 +166,44 @@ const getD = (offset = 0) => {
 
 const saveL = () => localStorage.setItem('lp_d', JSON.stringify(db));
 
-// Optimized Startup: Fast load from LocalStorage first, then silent sync
+// INITIALIZATION
 function init() {
     // 1. Immediate UI Render from Local Data
     drawR(); 
     updateS();
     
-    // 2. Silent Cloud Sync in background
-    setTimeout(pull, 500); 
+    // 2. Automatic Silent Sync for GitHub Pages launch
+    autoSync();
     
-    // 3. Initialize UI helpers
+    // 3. Setup Pull-to-refresh
     initPTR();
 }
 
+async function autoSync() {
+    const indicator = document.getElementById('sync-indicator');
+    indicator.classList.add('syncing');
+    
+    try {
+        await pull();
+        indicator.classList.remove('syncing');
+        indicator.classList.add('success');
+        setTimeout(() => indicator.classList.remove('success'), 2000);
+    } catch (e) {
+        indicator.classList.remove('syncing');
+    }
+}
+
 async function pull() {
-    return new Promise((res) => {
+    return new Promise((res, rej) => {
         const c = 'cb'+Date.now();
+        const timeout = setTimeout(() => rej('timeout'), 10000);
+        
         window[c] = (d) => {
+            clearTimeout(timeout);
             if(d.txns) {
                 db.t = d.txns.map(t => ({...t, date: String(t.date).split('T')[0], synced: true}));
                 db.c = d.customers || {};
                 saveL(); 
-                // Refresh UI after sync completes
                 drawR(); 
                 updateS();
                 if(document.getElementById('sec-books').classList.contains('active')) drawB();
@@ -194,6 +212,7 @@ async function pull() {
         };
         const s = document.createElement('script');
         s.src = `${SCRIPT_URL}?action=getData&callback=${c}`;
+        s.onerror = () => { clearTimeout(timeout); rej(); };
         document.body.appendChild(s);
     });
 }
@@ -216,13 +235,7 @@ function setT(t) {
     s.innerText = t === 'bill' ? 'ADD BILL (+)' : 'ADD PAYMENT RECEIVED';
 }
 
-function tglR() {
-    const r = document.getElementById('iR');
-    r.style.display = r.style.display === 'none' ? 'block' : 'none';
-}
-
 function openReportModal() {
-    document.getElementById('btn-day-before').innerText = `📅 ${getD(2).split('-').reverse().join('/')}`;
     document.getElementById('report-modal').style.display = 'flex';
 }
 function closeReportModal() { document.getElementById('report-modal').style.display = 'none'; }
@@ -236,12 +249,12 @@ function generateSpecificReport(offset) {
     
     let saleHtml = '', saleTotal = 0;
     dayBills.forEach(b => { saleHtml += `<div class="summary-item"><span>${b.name}</span><span>₹${b.amount}</span></div>`; saleTotal += b.amount; });
-    document.getElementById('cap-sale-list').innerHTML = saleHtml || '<div style="font-size:10px; color:#444; text-align:center; padding:10px">No Sales</div>';
+    document.getElementById('cap-sale-list').innerHTML = saleHtml || '<div style="color:#444; text-align:center; padding:10px">No Sales</div>';
     document.getElementById('cap-sale-total').innerText = saleTotal;
 
     let payHtml = '', payTotal = 0;
     dayPays.forEach(p => { payHtml += `<div class="summary-item"><span>${p.name}</span><span>₹${p.amount}</span></div>`; payTotal += p.amount; });
-    document.getElementById('cap-pay-list').innerHTML = payHtml || '<div style="font-size:10px; color:#444; text-align:center; padding:10px">No Payments</div>';
+    document.getElementById('cap-pay-list').innerHTML = payHtml || '<div style="color:#444; text-align:center; padding:10px">No Payments</div>';
     document.getElementById('cap-pay-total').innerText = payTotal;
 
     closeReportModal();
@@ -274,7 +287,7 @@ async function saveEdit() {
     db.t[idx].date = document.getElementById('editD').value;
     db.t[idx].synced = false;
     saveL(); drawR(); updateS(); closeModal();
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) }).then(() => pull());
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'editTxn', txn: db.t[idx] }) }).then(() => autoSync());
 }
 
 async function deleteTxn() {
@@ -283,7 +296,7 @@ async function deleteTxn() {
     const delId = db.t[idx].id;
     db.t.splice(idx, 1);
     saveL(); drawR(); updateS(); closeModal();
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: delId }) }).then(() => pull());
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTxn', id: delId }) }).then(() => autoSync());
 }
 
 function drawR() {
@@ -317,7 +330,7 @@ async function sub() {
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r, synced: false };
     db.t.push(tx); saveL(); drawR(); updateS();
     document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => pull());
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } })}).then(() => autoSync());
 }
 
 async function handleNewClient() {
@@ -325,7 +338,7 @@ async function handleNewClient() {
     if(!n || db.c[n]) return msg("Client Exists");
     db.c[n] = { joined: d, city: c }; saveL(); updateS();
     tab('home', document.querySelectorAll('.tab')[0]);
-    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => pull());
+    fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: d, type: 'join', remarks: '' }, customer: { name: n, city: c, joined: d } })}).then(() => autoSync());
 }
 
 function drawB(q = '') {
@@ -341,7 +354,7 @@ function drawB(q = '') {
     });
     let html = '';
     Object.keys(cities).sort((a,b) => cities[b].total - cities[a].total).forEach(cName => {
-        html += `<div class="city-header" style="color:var(--acc); font-size:10px; margin:10px 0; border-bottom:1px solid var(--bord)">${cName.toUpperCase()}</div>`;
+        html += `<div style="color:var(--acc); font-size:10px; margin:10px 0; border-bottom:1px solid var(--bord)">${cName.toUpperCase()}</div>`;
         cities[cName].items.sort((a,b) => b.bal - a.bal).forEach(x => {
             const displayBal = Math.round(Math.abs(x.bal));
             html += `<div class="card" onclick="toggleH(event, '${x.name.replace(/'/g,"\\'")}')">
@@ -373,45 +386,25 @@ function toggleH(e, name) {
     el.innerHTML = displayTxns.map(t => {
         const d = String(t.date).split('T')[0].split('-').reverse().join('/');
         const color = t.type === 'bill' ? 'var(--red)' : 'var(--grn)';
-        const sign = t.type === 'bill' ? '+' : '-';
         const runColor = t.runningBal >= 0 ? 'var(--red)' : 'var(--grn)';
-        
-        return `
-        <div class="txn-item" style="font-size:11px; align-items: flex-start;">
-            <div style="flex:1">
-                <small style="color:var(--mut)">${d}</small><br>
-                <span>${t.remarks || (t.type === 'bill' ? 'Sale' : 'Payment')}</span>
-            </div>
-            <div style="text-align:right; margin-right: 5px;">
-                <b style="color:${color}">${sign}₹${t.amount}</b>
-                <span class="run-bal" style="color:${runColor}">Bal: ₹${Math.round(Math.abs(t.runningBal))}</span>
-            </div>
+        return `<div class="txn-item" style="font-size:11px; align-items: flex-start;">
+            <div style="flex:1"><small style="color:var(--mut)">${d}</small><br><span>${t.remarks || (t.type === 'bill' ? 'Sale' : 'Payment')}</span></div>
+            <div style="text-align:right; margin-right: 5px;"><b style="color:${color}">${t.type === 'bill' ? '+' : '-'}₹${t.amount}</b><span class="run-bal" style="color:${runColor}">Bal: ₹${Math.round(Math.abs(t.runningBal))}</span></div>
             <span class="edit-ico" onclick="openEdit(${t.id})">📝</span>
         </div>`;
     }).join('') + `
     <div class="copy-group">
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 7, 'Weekly')">COPY WEEKLY</button>
         <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 30, 'Monthly')">COPY MONTHLY</button>
-        <button class="copy-btn" onclick="copyPeriod('${name.replace(/'/g,"\\'")}', 90, 'Quarterly')">COPY QUARTERLY</button>
     </div>`;
     el.style.display = 'block';
 }
 
 function copyPeriod(name, days, label) {
-    const cutoff = new Date(new Date().getTime() - (days * 86400000));
     const txns = db.t.filter(t => t.name === name && t.type !== 'join');
-    const pTxns = txns.filter(t => new Date(t.date) >= cutoff);
-    
-    const bills = pTxns.filter(t => t.type === 'bill').reduce((s,t) => s + t.amount, 0);
-    const pays = pTxns.filter(t => t.type === 'pay').reduce((s,t) => s + t.amount, 0);
     const totalBal = txns.reduce((s, t) => s + (t.type==='bill' ? t.amount : (t.type==='pay' ? -t.amount : 0)), 0);
-
-    const txt = `📋 *${label} Summary: ${name}*\n\n📈 Total Sales: ₹${bills}\n📉 Total Paid: ₹${pays}\n\n🚩 *Balance Due: ₹${Math.round(totalBal)}*\n\n_Generated via LedgerPro_`;
-    
-    const ta = document.createElement("textarea");
-    ta.value = txt; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    msg(`${label} Summary Copied!`);
+    const txt = `📋 *Summary: ${name}*\n🚩 *Balance Due: ₹${Math.round(totalBal)}*\n_Generated via LedgerPro_`;
+    const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    msg(`Summary Copied!`);
 }
 
 function updateS() {
@@ -435,7 +428,7 @@ function initPTR() {
         if (dist > 0 && dist < 120) { ptr.style.height = dist + 'px'; ptr.innerText = dist > 70 ? 'Release to Sync... 🔄' : 'Pull down to Sync...'; }
     }, {passive: true});
     window.addEventListener('touchend', async () => {
-        if (dist > 70) { ptr.innerText = 'Syncing...'; ptr.style.height = '40px'; await pull(); msg("Cloud Synced!"); }
+        if (dist > 70) { ptr.innerText = 'Syncing...'; ptr.style.height = '40px'; await autoSync(); msg("Cloud Synced!"); }
         ptr.style.height = '0'; sY = 0; dist = 0;
     });
 }
