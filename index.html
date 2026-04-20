@@ -4,98 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>LedgerPro</title>
-    
-    <link rel="manifest" id="pwa-manifest">
     
     <style>
         :root { --bg: #0a0a0f; --surf: #13131a; --bord: #2a2a3a; --acc: #f0c040; --red: #ff4d4d; --grn: #00e676; --ylw: #ffd600; --txt: #e8e8f0; --mut: #8080a0; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--txt); padding-bottom: 60px; font-size: 14px; overflow-x: hidden; touch-action: pan-y; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        #ptr { text-align: center; height: 0; overflow: hidden; transition: height 0.2s; color: var(--acc); font-size: 12px; display: flex; align-items: center; justify-content: center; background: var(--surf); border-bottom: 1px solid var(--bord); }
+        body { background: var(--bg); color: var(--txt); padding-bottom: 30px; font-size: 14px; overflow-x: hidden; touch-action: manipulation; line-height: 1.4; }
         
-        .nav { position: sticky; top: 0; z-index: 99; background: rgba(10,10,15,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--bord); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs { display: flex; gap: 4px; }
-        .tab { padding: 5px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; border:none; background:transparent; color: var(--mut); cursor: pointer; }
+        /* Navigation & Header */
+        .nav { position: sticky; top: 0; z-index: 99; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--bord); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; height: 60px; }
+        .nav-tabs { display: flex; gap: 6px; }
+        .tab { padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; border:none; background:transparent; color: var(--mut); cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
         .tab.active { background: var(--acc); color: #000; }
-        
-        .header-bal { font-size: 11px; font-weight: 800; color: var(--acc); margin-left: 8px; letter-spacing: 0.5px; opacity: 0.9; }
+        .header-bal { font-size: 13px; font-weight: 900; color: var(--acc); margin-left: 10px; letter-spacing: 0.5px; }
 
-        .section { display: none; padding: 6px 10px; min-height: 80vh; }
+        /* Sections */
+        .section { display: none; padding: 12px; min-height: 85vh; animation: fadeIn 0.2s ease-out; }
         .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 10px; padding: 10px; margin-bottom: 6px; position: relative; }
-        .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-        .t-btn { padding: 8px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf); color: var(--mut); font-weight: 700; font-size: 11px; cursor: pointer; }
-        .t-btn.active.r { background: var(--red); color: #fff; border-color: var(--red); }
-        .t-btn.active.g { background: var(--grn); color: #fff; border-color: var(--grn); }
+        /* Cards & Forms */
+        .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; margin-bottom: 12px; position: relative; }
+        .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .t-btn { padding: 14px; border-radius: 10px; border: 1px solid var(--bord); background: #1c1c28; color: var(--mut); font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .t-btn.active.r { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 0 4px 12px rgba(255,77,77,0.3); }
+        .t-btn.active.g { background: var(--grn); color: #fff; border-color: var(--grn); box-shadow: 0 4px 12px rgba(0,230,118,0.3); }
         
-        input, select { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 8px; padding: 9px; color: #fff; margin-bottom: 6px; font-size: 14px; outline: none; text-transform: capitalize; }
-        input[type="number"] { text-transform: none; }
+        input, select { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 10px; padding: 14px; color: #fff; margin-bottom: 10px; font-size: 16px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--acc); }
+        input::placeholder { color: #555; }
 
-        .btn-sub { width: 100%; padding: 10px; border-radius: 10px; border: none; font-weight: 800; margin-top: 2px; cursor: pointer; transition: 0.2s; }
+        .btn-sub { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         
-        .txn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
-        .date-separator { grid-column: span 2; height: 1px; background: var(--bord); margin: 4px 0 2px 0; opacity: 0.3; }
+        /* Transaction Grid */
+        .txn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .date-separator { grid-column: span 2; padding: 12px 4px 4px; font-size: 10px; font-weight: 900; color: var(--mut); text-transform: uppercase; letter-spacing: 1px; }
         
-        .txn-item { display: flex; flex-direction: column; padding: 6px 8px; border-radius: 6px; background: #1c1c28; border: 1px solid #2a2a3a55; position: relative; margin-bottom: 0px; cursor: pointer; min-height: 40px; justify-content: center; }
-        .txn-item:active { background: #2a2a3a; }
-        .txn-item.bill { border-left: 2px solid var(--red); }
-        .txn-item.pay { border-left: 2px solid var(--grn); }
+        .txn-item { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 10px; background: #1c1c28; border: 1px solid #2a2a3a; min-height: 52px; justify-content: center; transition: background 0.1s; }
+        .txn-item:active { background: #252535; transform: scale(0.98); }
+        .txn-item.bill { border-left: 3px solid var(--red); }
+        .txn-item.pay { border-left: 3px solid var(--grn); }
         
-        .txn-header { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-        .txn-name { font-weight: 700; font-size: 9.5px; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-        .txn-amt { font-size: 10px; font-weight: 800; white-space: nowrap; }
-        .txn-rem { font-size: 8px; color: var(--mut); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+        .txn-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .txn-name { font-weight: 700; font-size: 11px; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #fff; }
+        .txn-amt { font-size: 11px; font-weight: 900; white-space: nowrap; }
+        .txn-rem { font-size: 9px; color: var(--mut); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
         
-        .sync-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .sync-dot.synced { background: var(--grn); box-shadow: 0 0 3px var(--grn); }
-        .sync-dot.syncing { background: var(--ylw); box-shadow: 0 0 3px var(--ylw); animation: pulse 1s infinite; }
-        .sync-dot.pending { background: var(--red); box-shadow: 0 0 3px var(--red); }
+        /* Row Items */
+        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; margin-bottom: 6px; cursor: pointer; }
+        .row-item:active { background: #1c1c28; }
+        .row-name { font-weight: 900; font-size: 13px; text-transform: uppercase; }
+        .row-sub { font-size: 10px; color: var(--mut); margin-top: 2px; }
+        .row-val { font-family: 'Courier New', monospace; font-weight: 800; font-size: 13px; color: var(--txt); }
 
+        .search-container { position: sticky; top: 60px; background: var(--bg); z-index: 10; padding: 4px 0 10px 0; }
+        .books-sub-tabs { display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--bord); padding: 0 4px 8px; }
+        .sub-tab { font-size: 12px; font-weight: 800; color: var(--mut); cursor: pointer; border: none; background: transparent; padding-bottom: 6px; position: relative; }
+        .sub-tab.active { color: var(--acc); }
+        .sub-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--acc); }
+
+        /* Report Controls in Add Section */
+        .report-mini-card { background: #0f0f15; border: 1px solid var(--bord); border-radius: 14px; padding: 16px; margin-top: 20px; position: relative; }
+        .report-mini-icon { position: absolute; top: -10px; left: 16px; background: var(--bg); padding: 0 8px; color: var(--acc); }
+        .report-mini-header { font-size: 10px; font-weight: 900; color: var(--mut); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
+        .report-mini-btns { display: flex; gap: 8px; }
+        .dl-mini-btn { flex: 1; background: var(--surf); border: 1px solid var(--bord); color: var(--txt); padding: 10px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .dl-mini-btn:active { background: var(--acc); color: #000; }
+
+        /* Modals & Overlays */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(5px); }
+        .modal { background: var(--surf); border: 1.5px solid var(--bord); border-radius: 20px; padding: 24px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        
+        .autocomplete { position: absolute; background: #1c1c28; border: 1px solid var(--acc); width: 100%; z-index: 100; border-radius: 12px; max-height: 250px; overflow-y: auto; top: 58px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+        .auto-item { padding: 14px 16px; border-bottom: 1px solid var(--bord); color: var(--txt); display: flex; justify-content: space-between; align-items: center; }
+
+        .sync-indicator { position: fixed; bottom: 20px; right: 20px; width: 10px; height: 10px; border-radius: 50%; background: #222; z-index: 200; }
+        .sync-indicator.syncing { background: var(--acc); box-shadow: 0 0 15px var(--acc); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .history-pane { display: none; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--bord); }
-        .hist-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; padding: 6px 0; border-bottom: 1px solid #2a2a3a; cursor: pointer; }
-        
-        .autocomplete { position: absolute; background: #1c1c28; border: 1px solid var(--acc); width: 100%; z-index: 100; border-radius: 8px; max-height: 200px; overflow-y: auto; top: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .auto-item { padding: 10px 12px; border-bottom: 1px solid var(--bord); color: var(--txt); text-transform: capitalize; display: flex; justify-content: space-between; align-items: center; }
-        .auto-item small { color: var(--mut); font-size: 9px; margin-left: 10px; }
-        
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--acc); color: #000; padding: 8px 16px; border-radius: 30px; font-size: 11px; font-weight: 800; z-index: 9999; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.6); text-align: center; border: 1.5px solid #000; }
-        
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal { background: var(--surf); border: 2px solid var(--acc); border-radius: 12px; padding: 20px; width: 100%; max-width: 300px; text-align: center; }
-        .modal-btns { display: flex; gap: 8px; }
-
-        .sync-indicator { position: fixed; bottom: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: #444; transition: 0.3s; z-index: 100; }
-        .sync-indicator.syncing { background: var(--acc); box-shadow: 0 0 10px var(--acc); animation: pulse 1s infinite; }
-
-        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--surf); border: 1px solid var(--bord); border-radius: 8px; margin-bottom: 4px; cursor: pointer; }
-        .row-name { font-weight: 800; font-size: 12px; text-transform: uppercase; line-height: 1; }
-        .row-sub { font-size: 8.5px; color: var(--mut); text-transform: capitalize; margin-top: 2px; }
-        .row-val { font-family: monospace; font-weight: 700; color: var(--mut); font-size: 12px; }
-
-        .remark-toggle { font-size: 10px; color: var(--mut); margin-bottom: 6px; cursor: pointer; display: inline-block; padding: 2px 0; border-bottom: 1px dotted var(--mut); }
-        
-        .search-container { position: sticky; top: 0; background: var(--bg); z-index: 10; padding-bottom: 6px; }
-        .search-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; background: var(--acc); color: #000; font-size: 9px; font-weight: 800; margin-bottom: 4px; }
-
-        .books-sub-tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--bord); padding-bottom: 6px; }
-        .sub-tab { font-size: 11px; font-weight: 800; color: var(--mut); cursor: pointer; border: none; background: transparent; padding-bottom: 4px; position: relative; }
-        .sub-tab.active { color: var(--acc); }
-        .sub-tab.active::after { content: ''; position: absolute; bottom: -6px; left: 0; width: 100%; height: 2px; background: var(--acc); }
+        .remark-toggle { font-size: 11px; color: var(--acc); margin: 4px 0 12px; cursor: pointer; display: inline-block; font-weight: 700; }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
 
-<div id="ptr">Pull down to Sync...</div>
 <div id="sync-indicator" class="sync-indicator"></div>
 
 <nav class="nav">
     <div style="display:flex; align-items:center;">
-        <div style="font-weight:900; font-size: 15px;">LP<span style="color:var(--acc)">.</span></div>
+        <div style="font-weight:900; font-size: 18px; letter-spacing: -0.5px;">LP<span style="color:var(--acc)">.</span></div>
         <div id="header-total" class="header-bal"></div>
     </div>
     <div class="nav-tabs">
@@ -105,21 +104,19 @@
     </div>
 </nav>
 
-<div id="toast" class="toast"></div>
+<div id="toast" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--acc); color:#000; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; z-index:9999; display:none; box-shadow:0 10px 20px rgba(0,0,0,0.4)"></div>
 
-<!-- Edit Modal -->
+<!-- Edit Entry Modal -->
 <div id="modal-edit-txn" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
-        <h2 style="font-size:14px; color:var(--acc)">Edit Transaction</h2>
-        <div style="margin-top:8px">
-            <input id="editA" type="number" placeholder="Amount">
-            <select id="editT">
-                <option value="bill">SALE (+)</option>
-                <option value="pay">PAYMENT (-)</option>
-            </select>
-            <input id="editR" placeholder="Remarks">
-        </div>
-        <div class="modal-btns">
+        <h2 style="font-size:16px; color:var(--acc); margin-bottom:16px">Edit Entry</h2>
+        <input id="editA" type="number" placeholder="Amount" inputmode="decimal">
+        <select id="editT">
+            <option value="bill">SALE (+)</option>
+            <option value="pay">PAYMENT (-)</option>
+        </select>
+        <input id="editR" placeholder="Remarks">
+        <div style="display:flex; gap:10px; margin-top:10px">
             <button class="btn-sub" style="background:var(--bord); color:var(--txt)" onclick="closeModal('modal-edit-txn')">CANCEL</button>
             <button id="save-edit-btn" class="btn-sub" style="background:var(--acc); color:#000">SAVE</button>
         </div>
@@ -129,36 +126,38 @@
 <!-- Success Modal -->
 <div id="modal-success" class="modal-overlay" onclick="closeModal('modal-success')">
     <div class="modal" onclick="event.stopPropagation()">
-        <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
-        <h2 id="m-name" style="color:var(--acc); font-size:16px">NAME</h2>
-        <p id="m-amt" style="font-size:14px; font-weight:800; margin:8px 0">0</p>
-        <button class="btn-sub" style="background:var(--acc); color:#000" onclick="closeModal('modal-success')">OK</button>
+        <div style="font-size: 40px; margin-bottom: 12px;">✨</div>
+        <h2 id="m-name" style="color:var(--acc); font-size:18px; text-transform:uppercase">NAME</h2>
+        <p id="m-amt" style="font-size:22px; font-weight:900; margin:12px 0; font-family:monospace">0</p>
+        <button class="btn-sub" style="background:var(--acc); color:#000" onclick="closeModal('modal-success')">DONE</button>
     </div>
 </div>
 
-<!-- HOME -->
+<!-- Home Section -->
 <div id="sec-home" class="section active">
     <div class="type-toggle">
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
         <button class="t-btn" id="bg" onclick="setT('pay')">PAYMENT (-)</button>
     </div>
+    
     <div id="form-card" class="card" style="display:none">
-        <div id="cust-bal-preview" style="font-size:10px; margin-bottom:4px; display:none">
-            <span style="color:var(--mut)">Balance: </span><span id="bal-val" style="color:var(--acc); font-weight:800"></span>
+        <div id="cust-bal-preview" style="font-size:11px; margin-bottom:8px; display:none">
+            <span style="color:var(--mut)">Current Balance: </span><span id="bal-val" style="color:var(--acc); font-weight:900"></span>
         </div>
-        <div style="position:relative; margin-bottom:6px;">
-            <input id="iN" placeholder="Customer Name" oninput="autoC('iN', 'auto', 'cust')" autocomplete="off" style="margin:0">
+        <div style="position:relative;">
+            <input id="iN" placeholder="Customer Name" oninput="autoC('iN', 'auto', 'cust')" autocomplete="off">
             <div id="auto" class="autocomplete" style="display:none"></div>
         </div>
         <input id="iA" type="number" placeholder="Amount (₹)" inputmode="decimal">
-        <span class="remark-toggle" onclick="toggleRemarks()">+ Add Remarks</span>
+        <span class="remark-toggle" onclick="toggleRemarks()">+ ADD REMARKS / TAGS</span>
         <input id="iR" placeholder="Remarks (Use # to close)" style="display:none">
-        <button id="sBtn" class="btn-sub" onclick="sub()">ADD ENTRY</button>
+        <button id="sBtn" class="btn-sub" onclick="sub()">POST ENTRY</button>
     </div>
+
     <div id="txn-list-container" class="txn-grid"></div>
 </div>
 
-<!-- BOOKS -->
+<!-- Books Section -->
 <div id="sec-books" class="section">
     <div class="books-sub-tabs">
         <button class="sub-tab active" id="st-list" onclick="setBookSubTab('list')">CITY LIST</button>
@@ -167,89 +166,95 @@
 
     <div id="view-city-list">
         <div class="search-container">
-            <input id="bookSearch" placeholder="Search Client..." oninput="handleBookSearch(this.value)">
+            <input id="bookSearch" placeholder="Search Customer..." oninput="handleBookSearch(this.value)">
         </div>
-        
-        <div id="cityListView">
-            <div id="bookList"></div>
-        </div>
-        
+        <div id="cityListView"><div id="bookList"></div></div>
         <div id="customerListView" style="display:none">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h3 id="selectedCityName" style="color:var(--acc); text-transform: uppercase; font-size: 12px;"></h3>
-                <button class="btn-sub" style="width:auto; padding:4px 10px; font-size:10px; background:var(--bord); color:var(--txt)" onclick="backToCities()">CLOSE CITY</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 4px 0 12px;">
+                <h3 id="selectedCityName" style="color:var(--acc); text-transform: uppercase; font-size: 13px; font-weight:900"></h3>
+                <button class="tab" style="background:var(--bord); color:var(--txt); padding: 6px 12px" onclick="backToCities()">BACK</button>
             </div>
             <div id="customerList"></div>
         </div>
     </div>
 
     <div id="view-shared-log" style="display:none">
-        <div class="card" style="border-color: var(--acc); border-style: dashed;">
-            <p style="font-size: 11px; color: var(--mut); margin-bottom: 10px;">Marking ledgers as shared will add a <b>#</b> to every client's latest transaction and record today as the last shared date.</p>
+        <div class="card" style="border-color: var(--acc); border-style: dashed; text-align:center">
+            <p style="font-size: 11px; color: var(--mut); margin-bottom: 14px;">Marking as shared appends a # to every client's latest transaction to reset the balance start point.</p>
             <button class="btn-sub" style="background: var(--acc); color: #000;" onclick="markAllAsShared()">MARK ALL AS SHARED</button>
         </div>
         <div id="sharedLogList"></div>
     </div>
 </div>
 
-<!-- CLIENTS -->
+<!-- Clients Section -->
 <div id="sec-add" class="section">
     <div class="card">
-        <h3 style="color:var(--acc); margin-bottom:8px; font-size:12px;">Add New Client</h3>
+        <h3 style="color:var(--acc); margin-bottom:12px; font-size:14px; font-weight:900">Add New Client</h3>
         <input id="newCustName" placeholder="Full Name">
         <div style="position:relative">
             <input id="newCustCity" placeholder="City" oninput="autoC('newCustCity', 'autoCity', 'city')">
-            <div id="autoCity" class="autocomplete" style="display:none; top:40px"></div>
+            <div id="autoCity" class="autocomplete" style="display:none"></div>
         </div>
-        <button class="btn-sub" style="background:var(--acc); color:#000;" onclick="handleNewClient()">REGISTER</button>
+        <button class="btn-sub" style="background:var(--acc); color:#000;" onclick="handleNewClient()">REGISTER CLIENT</button>
     </div>
-    <div id="clientRegistry" style="margin-top:8px"></div>
+
+    <!-- Mini Report Section in Clients -->
+    <div class="report-mini-card">
+        <div class="report-mini-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </div>
+        <div class="report-mini-header">Report Download</div>
+        <div class="report-mini-btns">
+            <button class="dl-mini-btn" onclick="generateReport('today')">TODAY</button>
+            <button class="dl-mini-btn" onclick="generateReport('yesterday')">YESTERDAY</button>
+        </div>
+    </div>
+
+    <canvas id="reportCanvas" style="display:none"></canvas>
+    
+    <div id="clientRegistry" style="margin-top:20px"></div>
 </div>
 
 <script>
-function setupPWA() {
-    const manifest = {
-        "name": "LedgerPro",
-        "short_name": "LedgerPro",
-        "start_url": ".",
-        "display": "standalone",
-        "background_color": "#0a0a0f",
-        "theme_color": "#0a0a0f",
-        "description": "Premium Business Ledger",
-        "icons": [{ "src": "https://img.icons8.com/fluency/512/ledger.png", "sizes": "512x512", "type": "image/png" }]
-    };
-    const manifestURL = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'}));
-    document.querySelector('#pwa-manifest').setAttribute('href', manifestURL);
-
-    const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => {})); });`;
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], {type: 'text/javascript'})), {scope: './'}).catch(err => {});
-    }
-}
-
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHDEi_3-0oaLvlPqM3tJdDcMLCdOvr3DNRdl-DDOcAJu_oCJrLCrukhRycnN6nBcwY/exec";
 let db = JSON.parse(localStorage.getItem('lp_ledger_v2') || '{"c":{},"t":[],"o":[]}'), curT = '';
 let currentlySyncingId = null;
-
 const SHOP_CODE_MAP = { '1':'K', '2':'A', '3':'N', '4':'P', '5':'U', '6':'R', '7':'C', '8':'I', '9':'T', '0':'Y' };
-const getD = () => new Date(new Date().getTime() + (5.5 * 3600000)).toISOString().split('T')[0];
-const saveL = () => localStorage.setItem('lp_ledger_v2', JSON.stringify(db));
 
+const getD = (offset = 0) => {
+    const d = new Date(new Date().getTime() + (5.5 * 3600000));
+    if(offset) d.setDate(d.getDate() + offset);
+    return d.toISOString().split('T')[0];
+};
+const saveL = () => localStorage.setItem('lp_ledger_v2', JSON.stringify(db));
 const shopFmt = (n) => String(Math.abs(Math.round(n))).split('').map(d => SHOP_CODE_MAP[d] || d).join('');
-const smartFmt = (n) => { if (Math.abs(n) >= 30000) return shopFmt(n); else return '₹' + Number(n).toLocaleString('en-IN'); };
+const smartFmt = (n) => Math.abs(n) >= 30000 ? shopFmt(n) : '₹' + Number(n).toLocaleString('en-IN');
 const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
-function init() { setupPWA(); drawR(); updateS(); syncOutbox(); initPTR(); }
+function init() { 
+    drawR(); 
+    updateS(); 
+    syncOutbox(); 
+    initPTR(); 
+    if(db.t.length === 0) pull();
+}
 
 async function syncOutbox() {
-    if (db.o.length === 0) { currentlySyncingId = null; pull(); drawR(); return; }
+    if (db.o.length === 0) { 
+        currentlySyncingId = null; 
+        document.getElementById('sync-indicator').classList.remove('syncing');
+        return; 
+    }
     document.getElementById('sync-indicator').classList.add('syncing');
     const task = db.o[0];
     if (task.txn) currentlySyncingId = task.txn.id;
     drawR();
     try {
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(task) });
-        db.o.shift(); saveL(); syncOutbox();
+        db.o.shift(); 
+        saveL(); 
+        syncOutbox();
     } catch (e) { 
         currentlySyncingId = null;
         document.getElementById('sync-indicator').classList.remove('syncing'); 
@@ -261,7 +266,16 @@ async function pull() {
     const indicator = document.getElementById('sync-indicator');
     indicator.classList.add('syncing');
     const c = 'cb'+Date.now();
-    window[c] = (d) => { if(d.txns) { db.t = d.txns; db.c = d.customers || {}; saveL(); drawR(); updateS(); } indicator.classList.remove('syncing'); };
+    window[c] = (d) => { 
+        if(d.txns) { 
+            db.t = d.txns; 
+            db.c = d.customers || {}; 
+            saveL(); 
+            drawR(); 
+            updateS(); 
+        } 
+        indicator.classList.remove('syncing'); 
+    };
     const s = document.createElement('script');
     s.src = `${SCRIPT_URL}?action=getData&callback=${c}`;
     document.body.appendChild(s);
@@ -291,7 +305,7 @@ function setT(t) {
     document.getElementById('form-card').style.display = 'block';
     const s = document.getElementById('sBtn');
     s.style.background = t === 'bill' ? 'var(--red)' : 'var(--grn)';
-    s.innerText = t === 'bill' ? 'ADD SALE (+)' : 'ADD PAYMENT (-)';
+    s.innerText = t === 'bill' ? 'POST SALE (+)' : 'POST PAYMENT (-)';
 }
 
 function autoC(inId, auId, type) {
@@ -307,7 +321,7 @@ function autoC(inId, auId, type) {
         const cities = [...new Set(Object.values(db.c).map(c => c.city))];
         cities.forEach(c => { if (c.toLowerCase().includes(v)) m.push({ name: c, extra: '' }); });
     }
-    a.innerHTML = m.map(item => `<div class="auto-item" onclick="sel('${item.name.replace(/'/g,"\\'")}','${inId}','${auId}','${type}')"><span>${item.name}</span>${item.extra ? `<small>${item.extra}</small>` : ''}</div>`).join('');
+    a.innerHTML = m.map(item => `<div class="auto-item" onclick="sel('${item.name.replace(/'/g,"\\'")}','${inId}','${auId}','${type}')"><span>${item.name}</span>${item.extra ? `<small style="color:var(--mut); font-size:10px">${item.extra}</small>` : ''}</div>`).join('');
     a.style.display = m.length ? 'block' : 'none';
 }
 
@@ -342,8 +356,8 @@ function drawR() {
     });
     
     let html = '';
-    groups.forEach((g, idx) => {
-        if (idx > 0) html += `<div class="date-separator"></div>`;
+    groups.forEach((g) => {
+        html += `<div class="date-separator">${g.date === getD() ? 'Today' : g.date}</div>`;
         const bills = g.items.filter(it => it.type === 'bill'), pays = g.items.filter(it => it.type === 'pay'), maxLen = Math.max(bills.length, pays.length);
         for (let i = 0; i < maxLen; i++) {
             const bill = bills[i], pay = pays[i];
@@ -357,7 +371,7 @@ function drawR() {
             html += `</div>`;
         }
     });
-    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:20px;color:var(--mut)">No entries yet</div>';
+    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries today</div>';
 }
 
 function openEditModal(id) {
@@ -379,7 +393,7 @@ function openEditModal(id) {
 
 async function sub() {
     const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
-    if(!n || isNaN(a) || !db.c[n]) return msg("Check Inputs");
+    if(!n || isNaN(a) || !db.c[n]) return msg("Check Client Details");
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r };
     db.t.push(tx);
     db.o.push({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } });
@@ -395,7 +409,6 @@ async function sub() {
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function handleBookSearch(q) {
-    // Whenever searching, close the city view and return to global search mode
     if (q.trim() !== "") {
         document.getElementById('customerListView').style.display = 'none';
         document.getElementById('cityListView').style.display = 'block';
@@ -406,46 +419,34 @@ function handleBookSearch(q) {
 function drawBookList(q = '') {
     const l = document.getElementById('bookList'), query = q.toLowerCase();
     let cities = {}, globalCustomers = [];
-    
     Object.keys(db.c).forEach(n => {
         const city = db.c[n].city || "Local";
         const bal = db.t.filter(t => t.name.toLowerCase() === n.toLowerCase()).reduce((s, t) => s + (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)), 0);
-        
-        // Always calculate city totals for the default view
         if(!cities[city]) cities[city] = 0;
         cities[city] += Math.max(0, bal);
-        
-        // Collect matching customers if searching
-        if (query.length > 0 && n.toLowerCase().includes(query)) {
-            globalCustomers.push({ name: n, city: city, bal: bal });
-        }
+        if (query.length > 0 && n.toLowerCase().includes(query)) globalCustomers.push({ name: n, city: city, bal: bal });
     });
     
     let html = '';
     if (query.length > 0) {
-        // Search Results View
         if (globalCustomers.length > 0) {
-            html += `<div class="search-badge">MATCHING CLIENTS</div>`;
+            html += `<div style="font-size:10px; font-weight:900; color:var(--acc); margin:10px 4px">RESULTS</div>`;
             globalCustomers.sort((a,b) => b.bal - a.bal).forEach(c => {
-                html += `<div class="row-item" onclick="viewClientDirectly('${c.name.replace(/'/g,"\\'")}', '${c.city.replace(/'/g,"\\'")}')"><div><span class="row-name">${c.name}</span><div class="row-sub">${c.city}</div></div><b style="color:var(--${c.bal>=0?'red':'grn'})">${smartFmt(c.bal)}</b></div>`;
+                html += `<div class="row-item" onclick="viewClientDirectly('${c.name.replace(/'/g,"\\'")}', '${c.city.replace(/'/g,"\\'")}')"><div><span class="row-name">${c.name}</span><div class="row-sub">${c.city}</div></div><b class="row-val" style="color:var(--${c.bal>=0?'red':'grn'})">${smartFmt(c.bal)}</b></div>`;
             });
-        } else {
-            html += '<div style="text-align:center; padding:40px; color:var(--mut)">No clients found</div>';
-        }
+        } else { html += '<div style="text-align:center; padding:40px; color:var(--mut)">No matches</div>'; }
     } else {
-        // Default City List View
         Object.keys(cities).sort((a,b) => cities[b] - cities[a]).forEach(city => {
-            html += `<div class="row-item" onclick="viewCityCustomers('${city.replace(/'/g,"\\'")}')"><div><span class="row-name" style="color:var(--acc)">${city}</span><div class="row-sub">City</div></div><span class="row-val">${shopFmt(cities[city])}</span></div>`;
+            html += `<div class="row-item" onclick="viewCityCustomers('${city.replace(/'/g,"\\'")}')"><div><span class="row-name" style="color:var(--acc)">${city}</span><div class="row-sub">City Total</div></div><span class="row-val">${shopFmt(cities[city])}</span></div>`;
         });
     }
     l.innerHTML = html;
 }
 
 function viewClientDirectly(name, city) { 
-    // Clear search and switch to city view to reveal client context
     document.getElementById('bookSearch').value = ''; 
     viewCityCustomers(city); 
-    setTimeout(() => { toggleH(null, name); }, 100); 
+    setTimeout(() => { toggleH(null, name); }, 150); 
 }
 
 function viewCityCustomers(city, q = '') {
@@ -458,13 +459,13 @@ function viewCityCustomers(city, q = '') {
         return { name: n, bal };
     }).sort((a,b) => b.bal - a.bal);
     l.innerHTML = customers.map(x => `
-        <div class="card" style="padding: 10px; margin-bottom: 5px;" onclick="copyAndToggle(event, '${x.name.replace(/'/g,"\\'")}')">
+        <div class="card" style="padding: 14px; margin-bottom: 8px;" onclick="copyAndToggle(event, '${x.name.replace(/'/g,"\\'")}')">
             <div style="display:flex; justify-content:space-between; align-items:center">
-                <div><b style="text-transform:capitalize; font-size:12px;">${x.name}</b><div style="font-size: 8px; color: var(--mut); margin-top: 2px;">Shared: ${db.c[x.name].lastShared || 'Never'}</div></div>
-                <b style="color:var(--${x.bal>=0?'red':'grn'}); font-size:12px;">${smartFmt(x.bal)}</b>
+                <div><b style="text-transform:capitalize; font-size:13px; color:#fff">${x.name}</b><div style="font-size: 9px; color: var(--mut); margin-top: 4px;">Shared: ${db.c[x.name].lastShared || 'Never'}</div></div>
+                <b style="color:var(--${x.bal>=0?'red':'grn'}); font-size:13px; font-family:monospace">${smartFmt(x.bal)}</b>
             </div>
-            <div id="h-${x.name.replace(/\s/g,'_')}" class="history-pane"></div>
-        </div>`).join('') || `<div style="text-align:center; padding:20px; color:var(--mut)">No clients match</div>`;
+            <div id="h-${x.name.replace(/\s/g,'_')}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #2a2a3a"></div>
+        </div>`).join('') || `<div style="text-align:center; padding:20px; color:var(--mut)">No clients</div>`;
 }
 
 function copyAndToggle(e, name) { shareLedger(name); toggleH(e, name); }
@@ -473,16 +474,15 @@ function backToCities() { document.getElementById('cityListView').style.display 
 function toggleH(e, name) {
     const id = "h-" + name.replace(/\s/g,'_'), el = document.getElementById(id);
     if(el.style.display === 'block') { el.style.display = 'none'; return; }
-    document.querySelectorAll('.history-pane').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('[id^="h-"]').forEach(p => p.style.display = 'none');
     const history = db.t.filter(t => t.name.toLowerCase() === name.toLowerCase() && t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 15);
-    el.innerHTML = history.map(t => `<div class="hist-row" onclick="event.stopPropagation(); openEditModal(${t.id})"><span>${t.date.split('-').reverse().slice(0,2).join('/')} ${t.remarks||''}</span><b style="color:var(--${t.type==='bill'?'red':'grn'})">${smartFmt(t.amount)}</b></div>`).join('');
+    el.innerHTML = history.map(t => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1c1c28; font-size:11px" onclick="event.stopPropagation(); openEditModal(${t.id})"><span style="color:var(--mut)">${t.date.split('-').reverse().slice(0,2).join('/')} ${t.remarks||''}</span><b style="color:var(--${t.type==='bill'?'red':'grn'})">${smartFmt(t.amount)}</b></div>`).join('');
     el.style.display = 'block';
 }
 
 function shareLedger(name) {
     const txns = db.t.filter(t => t.name.toLowerCase() === name.toLowerCase()).sort((a,b) => a.id - b.id);
     if(txns.length === 0) return;
-    
     let weeklyPayLine = "";
     const firstTxn = txns.find(t => t.type !== 'join');
     if (firstTxn) {
@@ -493,16 +493,10 @@ function shareLedger(name) {
             if (xAmount > 0) weeklyPayLine = `*Please pay ${fmt(Math.round(xAmount))} this week*\n\n`;
         }
     }
-    
     let startIndex = -1;
-    for(let i = txns.length - 1; i >= 0; i--) { 
-        if(String(txns[i].remarks || '').includes('#')) { startIndex = i; break; } 
-    }
-
+    for(let i = txns.length - 1; i >= 0; i--) { if(String(txns[i].remarks || '').includes('#')) { startIndex = i; break; } }
     let openingBal = 0, relevantTxns = [];
-    const today = new Date();
-    const cutoffDate = new Date(today.getTime() - (8 * 24 * 60 * 60 * 1000));
-
+    const today = new Date(), cutoffDate = new Date(today.getTime() - (8 * 24 * 60 * 60 * 1000));
     txns.forEach((t, idx) => {
         const tDate = new Date(t.date);
         if (startIndex !== -1) {
@@ -513,27 +507,21 @@ function shareLedger(name) {
             else relevantTxns.push(t);
         }
     });
-
     let currentBal = openingBal;
-    // Updated header format: Removed "Ledger: NAME" and added "Opening Balance" line properly
     let body = weeklyPayLine + `Opening Balance: ${fmt(openingBal)}\n\n`;
-    
     relevantTxns.forEach(t => {
         const dateStr = t.date.split('-').reverse().slice(0,2).join('/');
-        const label = t.type === 'bill' ? 'Sale' : 'Cash';
-        body += `${dateStr} ${label}: ${fmt(t.amount)} ${t.remarks || ''}\n`;
+        body += `${dateStr} ${t.type === 'bill' ? 'Sale' : 'Cash'}: ${fmt(t.amount)} ${t.remarks || ''}\n`;
         currentBal += (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0));
     });
-    
     body += `\n*Final Balance: ${fmt(currentBal)}*`;
-    
     const ta = document.createElement("textarea"); ta.value = body; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    msg("Copied!");
+    msg("Copied to Clipboard!");
 }
 
 function drawSharedLog() {
     const list = document.getElementById('sharedLogList');
-    list.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item" style="padding: 6px 10px;"><div><b style="font-size:11px">${n}</b><div class="row-sub">${db.c[n].city}</div></div><span style="font-size:9px; color:var(--mut)">Last: ${db.c[n].lastShared || 'Never'}</span></div>`).join('');
+    list.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item" style="padding: 10px 16px;"><div><b style="font-size:12px">${n}</b><div class="row-sub">${db.c[n].city}</div></div><span style="font-size:10px; color:var(--mut)">Shared: ${db.c[n].lastShared || 'Never'}</span></div>`).join('');
 }
 
 function markAllAsShared() {
@@ -548,16 +536,16 @@ function markAllAsShared() {
         db.c[name].lastShared = today;
         updatedCount++;
     });
-    saveL(); drawSharedLog(); syncOutbox(); msg(`Updated ${updatedCount} clients`);
+    saveL(); drawSharedLog(); syncOutbox(); msg(`Marked ${updatedCount} clients`);
 }
 
 function drawClientRegistry() {
     const r = document.getElementById('clientRegistry');
-    r.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item" onclick="editClientName('${n.replace(/'/g,"\\'")}')"><div><b style="font-size:12px">${n}</b><br><small style="color:var(--mut)">${db.c[n].city}</small></div><span style="font-size:10px; color:var(--acc)">EDIT</span></div>`).join('');
+    r.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item" onclick="editClientName('${n.replace(/'/g,"\\'")}')"><div><b style="font-size:13px">${n}</b><br><small style="color:var(--mut); font-size:10px">${db.c[n].city}</small></div><span style="font-size:11px; color:var(--acc); font-weight:800">EDIT</span></div>`).join('');
 }
 
 function editClientName(old) {
-    const n = prompt("Edit name", old);
+    const n = prompt("Change name for " + old, old);
     if (n && n !== old && !db.c[n]) {
         db.c[n] = db.c[old]; delete db.c[old];
         db.t.forEach(t => { if(t.name.toLowerCase() === old.toLowerCase()) t.name = n; });
@@ -568,11 +556,11 @@ function editClientName(old) {
 
 async function handleNewClient() {
     const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local";
-    if(!n || db.c[n]) return msg("Check Client Name");
+    if(!n || db.c[n]) return msg("Enter Unique Name");
     db.c[n] = { joined: getD(), city: c, lastShared: 'Never' };
     db.o.push({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: getD(), type: 'join', remarks: '' }, customer: { name: n, city: c, lastShared: 'Never' } });
     saveL(); document.getElementById('newCustName').value=''; document.getElementById('newCustCity').value='';
-    drawClientRegistry(); updateS(); syncOutbox(); msg("Registered!");
+    drawClientRegistry(); updateS(); syncOutbox(); msg("Client Registered!");
 }
 
 function updateS() {
@@ -584,12 +572,160 @@ function updateS() {
     document.getElementById('header-total').innerText = shopFmt(Math.round(due / 100000)) + " L";
 }
 
-function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none',1500); }
-function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.autocomplete') && !e.target.closest('.row-item') && !e.target.closest('.modal')) { document.querySelectorAll('.history-pane').forEach(p=>p.style.display='none'); document.querySelectorAll('.autocomplete').forEach(a=>a.style.display='none'); } }
+function generateReport(type) {
+    const targetDate = type === 'today' ? getD() : getD(-1);
+    const dayTxns = db.t.filter(t => t.date === targetDate && t.type !== 'join');
+    
+    if(dayTxns.length === 0) return msg("No transactions for " + type);
+
+    const canvas = document.getElementById('reportCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const bills = dayTxns.filter(it => it.type === 'bill');
+    const pays = dayTxns.filter(it => it.type === 'pay');
+    const maxItems = Math.max(bills.length, pays.length);
+    
+    const margin = 40, headerH = 120, rowH = 65, footerH = 120;
+    canvas.width = 1200; // Wider for side-by-side layout
+    canvas.height = headerH + (maxItems * rowH) + footerH + 40;
+
+    // BG
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Border
+    ctx.strokeStyle = '#f0c040';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+    // Header
+    ctx.fillStyle = '#f0c040';
+    ctx.font = 'bold 42px sans-serif';
+    ctx.fillText('LEDGER PRO', margin, 70);
+    ctx.fillStyle = '#8080a0';
+    ctx.font = '22px sans-serif';
+    ctx.fillText('TRANSACTION SUMMARY REPORT', margin, 105);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#e8e8f0';
+    ctx.fillText(targetDate.split('-').reverse().join('/'), canvas.width - margin, 70);
+    ctx.textAlign = 'left';
+
+    // Divider
+    ctx.strokeStyle = '#2a2a3a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(margin, 130);
+    ctx.lineTo(canvas.width - margin, 130);
+    ctx.stroke();
+
+    // Column Headers
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = '#ff4d4d';
+    ctx.fillText('SALE (+)', margin + 10, 165);
+    ctx.fillStyle = '#00e676';
+    ctx.textAlign = 'right';
+    ctx.fillText('CASH (-)', canvas.width - margin - 10, 165);
+    ctx.textAlign = 'left';
+
+    let y = 210;
+    let totalSale = 0, totalPay = 0;
+
+    for (let i = 0; i < maxItems; i++) {
+        const b = bills[i], p = pays[i];
+
+        // Draw Sale Box (Left)
+        if (b) {
+            totalSale += b.amount;
+            ctx.fillStyle = '#1c1c28';
+            ctx.fillRect(margin, y - 35, (canvas.width/2) - margin - 10, 55);
+            ctx.strokeStyle = '#2a2a3a';
+            ctx.strokeRect(margin, y - 35, (canvas.width/2) - margin - 10, 55);
+            
+            ctx.fillStyle = '#e8e8f0';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText(b.name.toUpperCase(), margin + 15, y - 12);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#8080a0';
+            ctx.fillText(b.remarks || '', margin + 15, y + 10);
+            
+            ctx.fillStyle = '#ff4d4d';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(fmt(b.amount), (canvas.width/2) - 25, y);
+            ctx.textAlign = 'left';
+        }
+
+        // Draw Cash Box (Right)
+        if (p) {
+            totalPay += p.amount;
+            const startX = (canvas.width/2) + 10;
+            ctx.fillStyle = '#1c1c28';
+            ctx.fillRect(startX, y - 35, (canvas.width/2) - margin - 10, 55);
+            ctx.strokeStyle = '#2a2a3a';
+            ctx.strokeRect(startX, y - 35, (canvas.width/2) - margin - 10, 55);
+
+            ctx.fillStyle = '#e8e8f0';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText(p.name.toUpperCase(), startX + 15, y - 12);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#8080a0';
+            ctx.fillText(p.remarks || '', startX + 15, y + 10);
+
+            ctx.fillStyle = '#00e676';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(fmt(p.amount), canvas.width - margin - 15, y);
+            ctx.textAlign = 'left';
+        }
+
+        y += rowH;
+    }
+
+    // Footer
+    const footerY = canvas.height - footerH + 20;
+    ctx.strokeStyle = '#f0c040';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(margin, footerY - 20);
+    ctx.lineTo(canvas.width - margin, footerY - 20);
+    ctx.stroke();
+
+    ctx.fillStyle = '#e8e8f0';
+    ctx.font = '22px sans-serif';
+    ctx.fillText('TOTAL SALES:', margin, footerY + 25);
+    ctx.fillStyle = '#ff4d4d';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(fmt(totalSale), margin + 180, footerY + 25);
+
+    ctx.fillStyle = '#e8e8f0';
+    ctx.font = '22px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('TOTAL CASH:', canvas.width - 280, footerY + 25);
+    ctx.fillStyle = '#00e676';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(fmt(totalPay), canvas.width - margin, footerY + 25);
+
+    // Final Blob Download
+    canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `LP_Report_${targetDate}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        msg("Report Saved!");
+    }, 'image/png');
+}
+
+function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.autocomplete') && !e.target.closest('.row-item') && !e.target.closest('.modal')) { document.querySelectorAll('[id^="h-"]').forEach(p=>p.style.display='none'); document.querySelectorAll('.autocomplete').forEach(a=>a.style.display='none'); } }
+
 function initPTR() {
     let sY = 0;
     window.addEventListener('touchstart', (e) => { if(window.scrollY===0) sY=e.touches[0].pageY; }, {passive:true});
-    window.addEventListener('touchend', async (e) => { if(sY && e.changedTouches[0].pageY-sY > 80) { await pull(); msg("Synced!"); } sY=0; });
+    window.addEventListener('touchend', async (e) => { if(sY && e.changedTouches[0].pageY-sY > 90) { await pull(); msg("Data Refreshed"); } sY=0; });
 }
 window.onload = init;
 </script>
