@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>LedgerPro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         :root { --bg: #0a0a0f; --surf: #13131a; --bord: #2a2a3a; --acc: #f0c040; --red: #ff4d4d; --grn: #00e676; --ylw: #ffd600; --txt: #e8e8f0; --mut: #8080a0; }
@@ -16,10 +17,13 @@
         
         /* Navigation & Header */
         .nav { position: sticky; top: 0; z-index: 99; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--bord); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; height: 60px; }
-        .nav-tabs { display: flex; gap: 6px; }
-        .tab { padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; border:none; background:transparent; color: var(--mut); cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+        .nav-tabs { display: flex; gap: 4px; align-items: center; }
+        .tab { padding: 8px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; border:none; background:transparent; color: var(--mut); cursor: pointer; text-transform: uppercase; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .tab.active { background: var(--acc); color: #000; }
         .header-bal { font-size: 13px; font-weight: 900; color: var(--acc); margin-left: 10px; letter-spacing: 0.5px; }
+
+        .refresh-btn { background: none; border: none; color: var(--mut); cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .refresh-btn:active { color: var(--acc); transform: rotate(180deg); }
 
         /* Sections */
         .section { display: none; padding: 12px; min-height: 85vh; animation: fadeIn 0.2s ease-out; }
@@ -29,9 +33,11 @@
         /* Cards & Forms */
         .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; margin-bottom: 12px; position: relative; }
         .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .t-btn { padding: 14px; border-radius: 10px; border: 1px solid var(--bord); background: #1c1c28; color: var(--mut); font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .paymode-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+        .t-btn, .p-btn { padding: 14px; border-radius: 10px; border: 1px solid var(--bord); background: #1c1c28; color: var(--mut); font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.2s; flex: 1; text-align: center;}
         .t-btn.active.r { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 0 4px 12px rgba(255,77,77,0.3); }
         .t-btn.active.g { background: var(--grn); color: #fff; border-color: var(--grn); box-shadow: 0 4px 12px rgba(0,230,118,0.3); }
+        .p-btn.active { background: var(--acc); color: #000; border-color: var(--acc); }
         
         input, select { width: 100%; background: #1c1c28; border: 1px solid var(--bord); border-radius: 10px; padding: 14px; color: #fff; margin-bottom: 10px; font-size: 16px; outline: none; transition: border-color 0.2s; }
         input:focus { border-color: var(--acc); }
@@ -43,7 +49,7 @@
         .txn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
         .date-separator { grid-column: span 2; padding: 12px 4px 4px; font-size: 10px; font-weight: 900; color: var(--mut); text-transform: uppercase; letter-spacing: 1px; }
         
-        .txn-item { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 10px; background: #1c1c28; border: 1px solid #2a2a3a; min-height: 52px; justify-content: center; transition: background 0.1s; }
+        .txn-item { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 10px; background: #1c1c28; border: 1px solid #2a2a3a; min-height: 52px; justify-content: center; transition: background 0.1s; position: relative; }
         .txn-item:active { background: #252535; transform: scale(0.98); }
         .txn-item.bill { border-left: 3px solid var(--red); }
         .txn-item.pay { border-left: 3px solid var(--grn); }
@@ -53,7 +59,13 @@
         .txn-amt { font-size: 11px; font-weight: 900; white-space: nowrap; }
         .txn-rem { font-size: 9px; color: var(--mut); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
         
-        /* Row Items */
+        /* Sync Dots */
+        .sync-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        .sync-dot.synced { background: var(--grn); }
+        .sync-dot.pending { background: var(--ylw); }
+        .sync-dot.syncing { background: var(--acc); animation: pulse 1s infinite; }
+
+        /* Row Items (Books) */
         .row-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; margin-bottom: 6px; cursor: pointer; }
         .row-item:active { background: #1c1c28; }
         .row-name { font-weight: 900; font-size: 13px; text-transform: uppercase; }
@@ -65,14 +77,6 @@
         .sub-tab { font-size: 12px; font-weight: 800; color: var(--mut); cursor: pointer; border: none; background: transparent; padding-bottom: 6px; position: relative; }
         .sub-tab.active { color: var(--acc); }
         .sub-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--acc); }
-
-        /* Report Controls in Add Section */
-        .report-mini-card { background: #0f0f15; border: 1px solid var(--bord); border-radius: 14px; padding: 16px; margin-top: 20px; position: relative; }
-        .report-mini-icon { position: absolute; top: -10px; left: 16px; background: var(--bg); padding: 0 8px; color: var(--acc); }
-        .report-mini-header { font-size: 10px; font-weight: 900; color: var(--mut); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
-        .report-mini-btns { display: flex; gap: 8px; }
-        .dl-mini-btn { flex: 1; background: var(--surf); border: 1px solid var(--bord); color: var(--txt); padding: 10px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .dl-mini-btn:active { background: var(--acc); color: #000; }
 
         /* Modals & Overlays */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(5px); }
@@ -86,41 +90,53 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .remark-toggle { font-size: 11px; color: var(--acc); margin: 4px 0 12px; cursor: pointer; display: inline-block; font-weight: 700; }
+        #cust-bal-preview { background: #1c1c28; border: 1px dashed var(--bord); padding: 8px; border-radius: 8px; display: none; cursor: pointer; transition: 0.2s; }
+        
+        /* Report Export Temp Styles */
+        #report-export-container { width: 380px; background: #0a0a0f; color: #fff; padding: 20px; border: 1px solid #1a1a24; position: fixed; top: -2000px; left: 0; z-index: -100; }
+        .rep-title { text-align: center; color: var(--acc); font-size: 20px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; }
+        .rep-date { text-align: center; font-size: 11px; color: var(--mut); margin-bottom: 20px; letter-spacing: 1px; }
+        .rep-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .rep-box { background: #13131a; border: 1px solid #2a2a3a; border-radius: 12px; padding: 12px; }
+        .rep-col-head { font-weight: 900; font-size: 11px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #2a2a3a; text-transform: uppercase; }
+        .rep-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .rep-item-name { color: #e8e8f0; font-weight: 600; text-transform: capitalize; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 5px; }
+        .rep-item-val { font-weight: 900; font-family: monospace; white-space: nowrap; }
+        .rep-total-row { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 8px; border-top: 1.5px solid #2a2a3a; font-weight: 900; font-size: 12px; }
+
+        .loader-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
+        .loading-spinner { width: 40px; height: 40px; border: 4px solid var(--bord); border-top-color: var(--acc); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
 
 <div id="sync-indicator" class="sync-indicator"></div>
 
+<!-- NAVIGATION -->
 <nav class="nav">
     <div style="display:flex; align-items:center;">
-        <div style="font-weight:900; font-size: 18px; letter-spacing: -0.5px;">LP<span style="color:var(--acc)">.</span></div>
+        <button class="refresh-btn" onclick="pull()" title="Refresh Data">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
         <div id="header-total" class="header-bal"></div>
     </div>
     <div class="nav-tabs">
         <button class="tab active" onclick="tab('home',this)">HOME</button>
         <button class="tab" onclick="tab('books',this)">BOOKS</button>
         <button class="tab" onclick="tab('add',this)">CLIENTS</button>
+        <button class="tab" onclick="tab('rep',this)" style="padding: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </button>
     </div>
 </nav>
 
 <div id="toast" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--acc); color:#000; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; z-index:9999; display:none; box-shadow:0 10px 20px rgba(0,0,0,0.4)"></div>
 
-<!-- Edit Entry Modal -->
-<div id="modal-edit-txn" class="modal-overlay">
-    <div class="modal" onclick="event.stopPropagation()">
-        <h2 style="font-size:16px; color:var(--acc); margin-bottom:16px">Edit Entry</h2>
-        <input id="editA" type="number" placeholder="Amount" inputmode="decimal">
-        <select id="editT">
-            <option value="bill">SALE (+)</option>
-            <option value="pay">PAYMENT (-)</option>
-        </select>
-        <input id="editR" placeholder="Remarks">
-        <div style="display:flex; gap:10px; margin-top:10px">
-            <button class="btn-sub" style="background:var(--bord); color:var(--txt)" onclick="closeModal('modal-edit-txn')">CANCEL</button>
-            <button id="save-edit-btn" class="btn-sub" style="background:var(--acc); color:#000">SAVE</button>
-        </div>
-    </div>
+<!-- Loading Overlay for Reports -->
+<div id="loader" class="loader-overlay">
+    <div class="loading-spinner"></div>
+    <div style="font-weight: 800; font-size: 12px; letter-spacing: 1px; color: var(--acc);">GENERATING REPORT...</div>
 </div>
 
 <!-- Success Modal -->
@@ -139,12 +155,16 @@
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
         <button class="t-btn" id="bg" onclick="setT('pay')">PAYMENT (-)</button>
     </div>
-    
     <div id="form-card" class="card" style="display:none">
-        <div id="cust-bal-preview" style="font-size:11px; margin-bottom:8px; display:none">
-            <span style="color:var(--mut)">Current Balance: </span><span id="bal-val" style="color:var(--acc); font-weight:900"></span>
+        <div id="cust-bal-preview" onclick="fillSettlement()">
+            <span style="color:var(--mut); font-size: 10px;">Current Balance (Tap to fill):</span><br>
+            <span id="bal-val" style="color:var(--acc); font-weight:900; font-size: 14px;"></span>
         </div>
-        <div style="position:relative;">
+        <div id="paymode-wrap" class="paymode-toggle" style="display:none; margin-top: 10px;">
+            <button class="p-btn active" id="p-cash" onclick="setPayMode('CASH')">CASH</button>
+            <button class="p-btn" id="p-online" onclick="setPayMode('ONLINE')">ONLINE</button>
+        </div>
+        <div style="position:relative; margin-top: 10px;">
             <input id="iN" placeholder="Customer Name" oninput="autoC('iN', 'auto', 'cust')" autocomplete="off">
             <div id="auto" class="autocomplete" style="display:none"></div>
         </div>
@@ -153,7 +173,6 @@
         <input id="iR" placeholder="Remarks (Use # to close)" style="display:none">
         <button id="sBtn" class="btn-sub" onclick="sub()">POST ENTRY</button>
     </div>
-
     <div id="txn-list-container" class="txn-grid"></div>
 </div>
 
@@ -163,11 +182,8 @@
         <button class="sub-tab active" id="st-list" onclick="setBookSubTab('list')">CITY LIST</button>
         <button class="sub-tab" id="st-shared" onclick="setBookSubTab('shared')">SHARED LOG</button>
     </div>
-
     <div id="view-city-list">
-        <div class="search-container">
-            <input id="bookSearch" placeholder="Search Customer..." oninput="handleBookSearch(this.value)">
-        </div>
+        <div class="search-container"><input id="bookSearch" placeholder="Search Customer..." oninput="handleBookSearch(this.value)"></div>
         <div id="cityListView"><div id="bookList"></div></div>
         <div id="customerListView" style="display:none">
             <div style="display:flex; justify-content:space-between; align-items:center; margin: 4px 0 12px;">
@@ -177,10 +193,9 @@
             <div id="customerList"></div>
         </div>
     </div>
-
     <div id="view-shared-log" style="display:none">
         <div class="card" style="border-color: var(--acc); border-style: dashed; text-align:center">
-            <p style="font-size: 11px; color: var(--mut); margin-bottom: 14px;">Marking as shared appends a # to every client's latest transaction to reset the balance start point.</p>
+            <p style="font-size: 11px; color: var(--mut); margin-bottom: 14px;">Marking as shared appends a # to every client's latest transaction.</p>
             <button class="btn-sub" style="background: var(--acc); color: #000;" onclick="markAllAsShared()">MARK ALL AS SHARED</button>
         </div>
         <div id="sharedLogList"></div>
@@ -190,7 +205,7 @@
 <!-- Clients Section -->
 <div id="sec-add" class="section">
     <div class="card">
-        <h3 style="color:var(--acc); margin-bottom:12px; font-size:14px; font-weight:900">Add New Client</h3>
+        <h3 style="color:var(--acc); margin-bottom:12px; font-size:14px; font-weight:900">Register New Client</h3>
         <input id="newCustName" placeholder="Full Name">
         <div style="position:relative">
             <input id="newCustCity" placeholder="City" oninput="autoC('newCustCity', 'autoCity', 'city')">
@@ -198,29 +213,54 @@
         </div>
         <button class="btn-sub" style="background:var(--acc); color:#000;" onclick="handleNewClient()">REGISTER CLIENT</button>
     </div>
+    <div id="clientRegistry" style="margin-top:20px"></div>
+</div>
 
-    <!-- Mini Report Section in Clients -->
-    <div class="report-mini-card">
-        <div class="report-mini-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        </div>
-        <div class="report-mini-header">Report Download</div>
-        <div class="report-mini-btns">
-            <button class="dl-mini-btn" onclick="generateReport('today')">TODAY</button>
-            <button class="dl-mini-btn" onclick="generateReport('yesterday')">YESTERDAY</button>
+<!-- Reports Section -->
+<div id="sec-rep" class="section">
+    <div class="card">
+        <h3 style="color:var(--acc); margin-bottom:12px; font-size:14px; font-weight:900">Daily Report Image</h3>
+        <p style="font-size: 11px; color: var(--mut); margin-bottom: 15px;">Choose date and click to generate image report.</p>
+        <input type="date" id="repDate" style="margin-bottom: 15px; color-scheme: dark;">
+        <button class="btn-sub" style="background:var(--acc); color:#000;" onclick="generateReport()">GENERATE & DOWNLOAD</button>
+    </div>
+    <div id="repResult" style="margin-top: 15px; display:none">
+        <div class="card" style="text-align: center;">
+            <p style="font-size: 10px; color: var(--mut); margin-bottom: 10px;">If download didn't start, long press image below to save:</p>
+            <img id="finalRepImg" style="width: 100%; border-radius: 8px; border: 1px solid var(--bord);">
+            <button class="btn-sub" style="margin-top: 12px; background: #fff; color: #000; font-size: 11px; padding: 12px;" onclick="openRepInTab()">OPEN IN NEW TAB</button>
         </div>
     </div>
+</div>
 
-    <canvas id="reportCanvas" style="display:none"></canvas>
-    
-    <div id="clientRegistry" style="margin-top:20px"></div>
+<!-- Hidden Export Template -->
+<div id="report-export-container">
+    <div class="rep-title">Daily Business Summary</div>
+    <div class="rep-date" id="rep-date-label"></div>
+    <div class="rep-grid">
+        <div class="rep-box">
+            <div class="rep-col-head" style="color: var(--red)">BILLS (SALE)</div>
+            <div id="rep-bills-list"></div>
+            <div class="rep-total-row">
+                <span>Total:</span>
+                <span id="rep-bills-total" style="color: var(--red)">0</span>
+            </div>
+        </div>
+        <div class="rep-box">
+            <div class="rep-col-head" style="color: var(--grn)">CASH (PAYMENT)</div>
+            <div id="rep-pays-list"></div>
+            <div class="rep-total-row">
+                <span>Total:</span>
+                <span id="rep-pays-total" style="color: var(--grn)">0</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHDEi_3-0oaLvlPqM3tJdDcMLCdOvr3DNRdl-DDOcAJu_oCJrLCrukhRycnN6nBcwY/exec";
-let db = JSON.parse(localStorage.getItem('lp_ledger_v2') || '{"c":{},"t":[],"o":[]}'), curT = '';
+let db = JSON.parse(localStorage.getItem('lp_ledger_v2') || '{"c":{},"t":[],"o":[]}'), curT = '', curPM = 'CASH';
 let currentlySyncingId = null;
-const SHOP_CODE_MAP = { '1':'K', '2':'A', '3':'N', '4':'P', '5':'U', '6':'R', '7':'C', '8':'I', '9':'T', '0':'Y' };
 
 const getD = (offset = 0) => {
     const d = new Date(new Date().getTime() + (5.5 * 3600000));
@@ -228,37 +268,29 @@ const getD = (offset = 0) => {
     return d.toISOString().split('T')[0];
 };
 const saveL = () => localStorage.setItem('lp_ledger_v2', JSON.stringify(db));
-const shopFmt = (n) => String(Math.abs(Math.round(n))).split('').map(d => SHOP_CODE_MAP[d] || d).join('');
-const smartFmt = (n) => Math.abs(n) >= 30000 ? shopFmt(n) : '₹' + Number(n).toLocaleString('en-IN');
 const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
+const fmtPlain = (n) => Number(n).toLocaleString('en-IN');
 
 function init() { 
     drawR(); 
     updateS(); 
     syncOutbox(); 
-    initPTR(); 
+    document.getElementById('repDate').value = getD();
     if(db.t.length === 0) pull();
+    setInterval(pull, 20 * 60 * 1000);
 }
 
 async function syncOutbox() {
-    if (db.o.length === 0) { 
-        currentlySyncingId = null; 
-        document.getElementById('sync-indicator').classList.remove('syncing');
-        return; 
-    }
+    if (db.o.length === 0) { currentlySyncingId = null; document.getElementById('sync-indicator').classList.remove('syncing'); return; }
     document.getElementById('sync-indicator').classList.add('syncing');
     const task = db.o[0];
     if (task.txn) currentlySyncingId = task.txn.id;
     drawR();
     try {
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(task) });
-        db.o.shift(); 
-        saveL(); 
-        syncOutbox();
+        db.o.shift(); saveL(); syncOutbox();
     } catch (e) { 
-        currentlySyncingId = null;
-        document.getElementById('sync-indicator').classList.remove('syncing'); 
-        drawR();
+        currentlySyncingId = null; document.getElementById('sync-indicator').classList.remove('syncing'); drawR();
     }
 }
 
@@ -267,14 +299,8 @@ async function pull() {
     indicator.classList.add('syncing');
     const c = 'cb'+Date.now();
     window[c] = (d) => { 
-        if(d.txns) { 
-            db.t = d.txns; 
-            db.c = d.customers || {}; 
-            saveL(); 
-            drawR(); 
-            updateS(); 
-        } 
-        indicator.classList.remove('syncing'); 
+        if(d.txns) { db.t = d.txns; db.c = d.customers || {}; saveL(); drawR(); updateS(); drawSharedLog(); } 
+        indicator.classList.remove('syncing'); msg("Data Synced");
     };
     const s = document.createElement('script');
     s.src = `${SCRIPT_URL}?action=getData&callback=${c}`;
@@ -286,7 +312,7 @@ function tab(n, b) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('sec-' + n).classList.add('active');
     if(b) b.classList.add('active');
-    if(n === 'books') { setBookSubTab('list'); backToCities(); }
+    if(n === 'books') { setBookSubTab('list'); backToCities(); drawSharedLog(); }
     if(n === 'add') drawClientRegistry();
 }
 
@@ -303,9 +329,16 @@ function setT(t) {
     document.getElementById('br').className = t === 'bill' ? 't-btn active r' : 't-btn';
     document.getElementById('bg').className = t === 'pay' ? 't-btn active g' : 't-btn';
     document.getElementById('form-card').style.display = 'block';
+    document.getElementById('paymode-wrap').style.display = t === 'pay' ? 'flex' : 'none';
     const s = document.getElementById('sBtn');
     s.style.background = t === 'bill' ? 'var(--red)' : 'var(--grn)';
     s.innerText = t === 'bill' ? 'POST SALE (+)' : 'POST PAYMENT (-)';
+}
+
+function setPayMode(m) {
+    curPM = m;
+    document.getElementById('p-cash').className = m === 'CASH' ? 'p-btn active' : 'p-btn';
+    document.getElementById('p-online').className = m === 'ONLINE' ? 'p-btn active' : 'p-btn';
 }
 
 function autoC(inId, auId, type) {
@@ -321,7 +354,7 @@ function autoC(inId, auId, type) {
         const cities = [...new Set(Object.values(db.c).map(c => c.city))];
         cities.forEach(c => { if (c.toLowerCase().includes(v)) m.push({ name: c, extra: '' }); });
     }
-    a.innerHTML = m.map(item => `<div class="auto-item" onclick="sel('${item.name.replace(/'/g,"\\'")}','${inId}','${auId}','${type}')"><span>${item.name}</span>${item.extra ? `<small style="color:var(--mut); font-size:10px">${item.extra}</small>` : ''}</div>`).join('');
+    a.innerHTML = m.map(item => `<div class="auto-item" onclick="sel('${item.name.replace(/'/g,"\\'")}','${inId}','${auId}','${type}')"><span>${item.name}</span><small style="color:var(--mut); font-size:10px">${item.extra}</small></div>`).join('');
     a.style.display = m.length ? 'block' : 'none';
 }
 
@@ -330,9 +363,15 @@ function sel(val, inId, auId, type) {
     document.getElementById(auId).style.display = 'none';
     if (type === 'cust') {
         const bal = db.t.filter(t => t.name.toLowerCase() === val.toLowerCase()).reduce((s, t) => s + (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)), 0);
-        document.getElementById('bal-val').innerText = shopFmt(bal);
+        document.getElementById('bal-val').innerText = fmt(bal);
         document.getElementById('cust-bal-preview').style.display = 'block';
     }
+}
+
+function fillSettlement() {
+    const raw = document.getElementById('bal-val').innerText.replace(/[₹,]/g, '');
+    const val = Math.abs(parseFloat(raw));
+    if(!isNaN(val)) document.getElementById('iA').value = val;
 }
 
 function toggleRemarks() {
@@ -340,14 +379,9 @@ function toggleRemarks() {
     r.style.display = r.style.display === 'none' ? 'block' : 'none';
 }
 
-function getSyncStatus(id) {
-    if (currentlySyncingId === id) return 'syncing';
-    return db.o.some(o => o.txn && o.txn.id === id) ? 'pending' : 'synced';
-}
-
 function drawR() {
     const container = document.getElementById('txn-list-container');
-    const recents = [...db.t].filter(t => t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 60);
+    const recents = [...db.t].filter(t => t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 50);
     const groups = [];
     let currentGroup = null;
     recents.forEach(t => {
@@ -364,49 +398,34 @@ function drawR() {
             html += `<div style="display:contents">`;
             [bill, pay].forEach((item) => {
                 if (item) {
-                    const status = getSyncStatus(item.id), color = item.type === 'bill' ? 'var(--red)' : 'var(--grn)';
-                    html += `<div class="txn-item ${item.type}" onclick="openEditModal(${item.id})"><div class="txn-header"><span class="sync-dot ${status}"></span><span class="txn-name">${item.name}</span><span class="txn-amt" style="color:${color}">${smartFmt(item.amount)}</span></div><span class="txn-rem">${item.remarks || ''}</span></div>`;
+                    const status = currentlySyncingId === item.id ? 'syncing' : (db.o.some(o=>o.txn && o.txn.id===item.id)?'pending':'synced');
+                    const color = item.type === 'bill' ? 'var(--red)' : 'var(--grn)';
+                    html += `<div class="txn-item ${item.type}"><div class="txn-header"><span class="sync-dot ${status}"></span><span class="txn-name">${item.name}</span><span class="txn-amt" style="color:${color}">${fmt(item.amount)}</span></div><span class="txn-rem">${item.remarks || ''}</span></div>`;
                 } else { html += `<div></div>`; }
             });
             html += `</div>`;
         }
     });
-    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries today</div>';
-}
-
-function openEditModal(id) {
-    const tx = db.t.find(t => t.id === id);
-    if(!tx) return;
-    document.getElementById('editA').value = tx.amount;
-    document.getElementById('editT').value = tx.type;
-    document.getElementById('editR').value = tx.remarks || '';
-    document.getElementById('modal-edit-txn').style.display = 'flex';
-    document.getElementById('save-edit-btn').onclick = () => {
-        tx.amount = parseFloat(document.getElementById('editA').value);
-        tx.type = document.getElementById('editT').value;
-        tx.remarks = document.getElementById('editR').value;
-        db.o.push({ action: 'editTxn', txn: tx });
-        saveL(); drawR(); updateS();
-        closeModal('modal-edit-txn'); syncOutbox();
-    };
+    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries</div>';
 }
 
 async function sub() {
-    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
-    if(!n || isNaN(a) || !db.c[n]) return msg("Check Client Details");
+    const nInput = document.getElementById('iN'), aInput = document.getElementById('iA'), rInput = document.getElementById('iR');
+    const n = nInput.value.trim(), a = parseFloat(aInput.value), d = getD();
+    let r = rInput.value;
+    if(!n || isNaN(a) || !db.c[n]) return msg("Check Details");
+    if(curT === 'pay') r = `[${curPM}] ` + r;
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r };
     db.t.push(tx);
     db.o.push({ action: 'addTxn', txn: tx, customer: { name: n, ...db.c[n] } });
     saveL(); drawR(); updateS();
     document.getElementById('m-name').innerText = n;
-    document.getElementById('m-amt').innerText = smartFmt(a);
+    document.getElementById('m-amt').innerText = fmt(a);
     document.getElementById('modal-success').style.display = 'flex';
-    document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
-    document.getElementById('iR').style.display='none'; document.getElementById('cust-bal-preview').style.display='none';
+    nInput.value = ''; aInput.value = ''; rInput.value = ''; rInput.style.display = 'none';
+    document.getElementById('cust-bal-preview').style.display = 'none';
     syncOutbox();
 }
-
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function handleBookSearch(q) {
     if (q.trim() !== "") {
@@ -418,149 +437,105 @@ function handleBookSearch(q) {
 
 function drawBookList(q = '') {
     const l = document.getElementById('bookList'), query = q.toLowerCase();
-    let cities = {}, globalCustomers = [];
+    let cities = {};
     Object.keys(db.c).forEach(n => {
         const city = db.c[n].city || "Local";
         const bal = db.t.filter(t => t.name.toLowerCase() === n.toLowerCase()).reduce((s, t) => s + (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)), 0);
         if(!cities[city]) cities[city] = 0;
         cities[city] += Math.max(0, bal);
-        if (query.length > 0 && n.toLowerCase().includes(query)) globalCustomers.push({ name: n, city: city, bal: bal });
     });
-    
     let html = '';
-    if (query.length > 0) {
-        if (globalCustomers.length > 0) {
-            html += `<div style="font-size:10px; font-weight:900; color:var(--acc); margin:10px 4px">RESULTS</div>`;
-            globalCustomers.sort((a,b) => b.bal - a.bal).forEach(c => {
-                html += `<div class="row-item" onclick="viewClientDirectly('${c.name.replace(/'/g,"\\'")}', '${c.city.replace(/'/g,"\\'")}')"><div><span class="row-name">${c.name}</span><div class="row-sub">${c.city}</div></div><b class="row-val" style="color:var(--${c.bal>=0?'red':'grn'})">${smartFmt(c.bal)}</b></div>`;
-            });
-        } else { html += '<div style="text-align:center; padding:40px; color:var(--mut)">No matches</div>'; }
-    } else {
-        Object.keys(cities).sort((a,b) => cities[b] - cities[a]).forEach(city => {
-            html += `<div class="row-item" onclick="viewCityCustomers('${city.replace(/'/g,"\\'")}')"><div><span class="row-name" style="color:var(--acc)">${city}</span><div class="row-sub">City Total</div></div><span class="row-val">${shopFmt(cities[city])}</span></div>`;
-        });
-    }
+    Object.keys(cities).sort((a,b) => cities[b] - cities[a]).forEach(city => {
+        html += `<div class="row-item" onclick="viewCityCustomers('${city.replace(/'/g,"\\'")}')"><div><span class="row-name" style="color:var(--acc)">${city}</span><div class="row-sub">City Total</div></div><span class="row-val">${fmt(cities[city])}</span></div>`;
+    });
     l.innerHTML = html;
 }
 
-function viewClientDirectly(name, city) { 
-    document.getElementById('bookSearch').value = ''; 
-    viewCityCustomers(city); 
-    setTimeout(() => { toggleH(null, name); }, 150); 
-}
-
-function viewCityCustomers(city, q = '') {
+function viewCityCustomers(city) {
     document.getElementById('cityListView').style.display = 'none';
     document.getElementById('customerListView').style.display = 'block';
     document.getElementById('selectedCityName').innerText = city;
-    const query = q.toLowerCase(), l = document.getElementById('customerList');
-    const customers = Object.keys(db.c).filter(n => db.c[n].city === city && n.toLowerCase().includes(query)).map(n => {
+    const l = document.getElementById('customerList');
+    const customers = Object.keys(db.c).filter(n => db.c[n].city === city).map(n => {
         const bal = db.t.filter(t => t.name.toLowerCase() === n.toLowerCase()).reduce((s, t) => s + (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)), 0);
         return { name: n, bal };
     }).sort((a,b) => b.bal - a.bal);
-    l.innerHTML = customers.map(x => `
-        <div class="card" style="padding: 14px; margin-bottom: 8px;" onclick="copyAndToggle(event, '${x.name.replace(/'/g,"\\'")}')">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <div><b style="text-transform:capitalize; font-size:13px; color:#fff">${x.name}</b><div style="font-size: 9px; color: var(--mut); margin-top: 4px;">Shared: ${db.c[x.name].lastShared || 'Never'}</div></div>
-                <b style="color:var(--${x.bal>=0?'red':'grn'}); font-size:13px; font-family:monospace">${smartFmt(x.bal)}</b>
-            </div>
-            <div id="h-${x.name.replace(/\s/g,'_')}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #2a2a3a"></div>
-        </div>`).join('') || `<div style="text-align:center; padding:20px; color:var(--mut)">No clients</div>`;
+    l.innerHTML = customers.map(x => `<div class="card" style="padding: 14px; margin-bottom: 8px;"><div style="display:flex; justify-content:space-between; align-items:center"><div><b style="text-transform:capitalize; font-size:13px; color:#fff">${x.name}</b></div><b style="color:var(--${x.bal>=0?'red':'grn'}); font-size:13px; font-family:monospace">${fmt(x.bal)}</b></div></div>`).join('');
 }
 
-function copyAndToggle(e, name) { shareLedger(name); toggleH(e, name); }
-function backToCities() { document.getElementById('cityListView').style.display = 'block'; document.getElementById('customerListView').style.display = 'none'; document.getElementById('bookSearch').value = ''; drawBookList(); }
+function backToCities() { document.getElementById('cityListView').style.display = 'block'; document.getElementById('customerListView').style.display = 'none'; drawBookList(); }
 
-function toggleH(e, name) {
-    const id = "h-" + name.replace(/\s/g,'_'), el = document.getElementById(id);
-    if(el.style.display === 'block') { el.style.display = 'none'; return; }
-    document.querySelectorAll('[id^="h-"]').forEach(p => p.style.display = 'none');
-    const history = db.t.filter(t => t.name.toLowerCase() === name.toLowerCase() && t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 15);
-    el.innerHTML = history.map(t => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1c1c28; font-size:11px" onclick="event.stopPropagation(); openEditModal(${t.id})"><span style="color:var(--mut)">${t.date.split('-').reverse().slice(0,2).join('/')} ${t.remarks||''}</span><b style="color:var(--${t.type==='bill'?'red':'grn'})">${smartFmt(t.amount)}</b></div>`).join('');
-    el.style.display = 'block';
-}
-
-function shareLedger(name) {
-    const txns = db.t.filter(t => t.name.toLowerCase() === name.toLowerCase()).sort((a,b) => a.id - b.id);
-    if(txns.length === 0) return;
-    let weeklyPayLine = "";
-    const firstTxn = txns.find(t => t.type !== 'join');
-    if (firstTxn) {
-        const remVal = parseInt(firstTxn.remarks);
-        if (!isNaN(remVal) && remVal >= 1 && remVal <= 100) {
-            const finalBal = txns.reduce((s,t)=>s+(t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)),0);
-            const xAmount = (finalBal * remVal) / 100;
-            if (xAmount > 0) weeklyPayLine = `*Please pay ${fmt(Math.round(xAmount))} this week*\n\n`;
-        }
-    }
-    let startIndex = -1;
-    for(let i = txns.length - 1; i >= 0; i--) { if(String(txns[i].remarks || '').includes('#')) { startIndex = i; break; } }
-    let openingBal = 0, relevantTxns = [];
-    const today = new Date(), cutoffDate = new Date(today.getTime() - (8 * 24 * 60 * 60 * 1000));
-    txns.forEach((t, idx) => {
-        const tDate = new Date(t.date);
-        if (startIndex !== -1) {
-            if (idx <= startIndex) openingBal += (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0));
-            else relevantTxns.push(t);
-        } else {
-            if (tDate < cutoffDate) openingBal += (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0));
-            else relevantTxns.push(t);
-        }
-    });
-    let currentBal = openingBal;
-    let body = weeklyPayLine + `Opening Balance: ${fmt(openingBal)}\n\n`;
-    relevantTxns.forEach(t => {
-        const dateStr = t.date.split('-').reverse().slice(0,2).join('/');
-        body += `${dateStr} ${t.type === 'bill' ? 'Sale' : 'Cash'}: ${fmt(t.amount)} ${t.remarks || ''}\n`;
-        currentBal += (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0));
-    });
-    body += `\n*Final Balance: ${fmt(currentBal)}*`;
-    const ta = document.createElement("textarea"); ta.value = body; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    msg("Copied to Clipboard!");
-}
-
-function drawSharedLog() {
-    const list = document.getElementById('sharedLogList');
-    list.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item" style="padding: 10px 16px;"><div><b style="font-size:12px">${n}</b><div class="row-sub">${db.c[n].city}</div></div><span style="font-size:10px; color:var(--mut)">Shared: ${db.c[n].lastShared || 'Never'}</span></div>`).join('');
-}
-
-function markAllAsShared() {
-    const today = getD();
-    let updatedCount = 0;
-    Object.keys(db.c).forEach(name => {
-        const userTxns = db.t.filter(t => t.name.toLowerCase() === name.toLowerCase() && t.type !== 'join').sort((a,b) => b.id - a.id);
-        if(userTxns.length > 0) {
-            const latest = userTxns[0];
-            if(!String(latest.remarks).includes('#')) { latest.remarks = (latest.remarks || '') + ' #'; db.o.push({ action: 'editTxn', txn: latest }); }
-        }
-        db.c[name].lastShared = today;
-        updatedCount++;
-    });
-    saveL(); drawSharedLog(); syncOutbox(); msg(`Marked ${updatedCount} clients`);
+function handleNewClient() {
+    const nInput = document.getElementById('newCustName'), cInput = document.getElementById('newCustCity');
+    const n = nInput.value.trim(), c = cInput.value.trim() || "Local";
+    if(!n || db.c[n]) return msg("Enter Unique Name");
+    db.c[n] = { joined: getD(), city: c };
+    db.o.push({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: getD(), type: 'join', remarks: '' }, customer: { name: n, city: c } });
+    saveL(); nInput.value = ''; cInput.value = ''; drawClientRegistry(); updateS(); syncOutbox(); msg("Client Registered!");
 }
 
 function drawClientRegistry() {
     const r = document.getElementById('clientRegistry');
-    r.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item" onclick="editClientName('${n.replace(/'/g,"\\'")}')"><div><b style="font-size:13px">${n}</b><br><small style="color:var(--mut); font-size:10px">${db.c[n].city}</small></div><span style="font-size:11px; color:var(--acc); font-weight:800">EDIT</span></div>`).join('');
+    r.innerHTML = Object.keys(db.c).sort().map(n => `<div class="row-item"><div><b style="font-size:13px">${n}</b><br><small style="color:var(--mut); font-size:10px">${db.c[n].city}</small></div></div>`).join('');
 }
 
-function editClientName(old) {
-    const n = prompt("Change name for " + old, old);
-    if (n && n !== old && !db.c[n]) {
-        db.c[n] = db.c[old]; delete db.c[old];
-        db.t.forEach(t => { if(t.name.toLowerCase() === old.toLowerCase()) t.name = n; });
-        db.o.push({ action: 'editClient', oldName: old, newName: n });
-        saveL(); drawClientRegistry(); syncOutbox();
+function generateReport() {
+    const date = document.getElementById('repDate').value;
+    if(!date) return msg("Select Date");
+    const txns = db.t.filter(t => t.date === date);
+    if(!txns.length) return msg("No Data for this Date");
+
+    document.getElementById('loader').style.display = 'flex';
+    
+    // Prepare Template
+    document.getElementById('rep-date-label').innerText = date.split('-').reverse().join('/');
+    const bills = txns.filter(t => t.type === 'bill');
+    const pays = txns.filter(t => t.type === 'pay');
+    
+    let bH = '', bT = 0;
+    bills.forEach(b => { bH += `<div class="rep-item"><span class="rep-item-name">${b.name}</span><span class="rep-item-val">₹${fmtPlain(b.amount)}</span></div>`; bT += b.amount; });
+    document.getElementById('rep-bills-list').innerHTML = bH || 'None';
+    document.getElementById('rep-bills-total').innerText = fmtPlain(bT);
+
+    let pH = '', pT = 0;
+    pays.forEach(p => { pH += `<div class="rep-item"><span class="rep-item-name">${p.name}</span><span class="rep-item-val">₹${fmtPlain(p.amount)}</span></div>`; pT += p.amount; });
+    document.getElementById('rep-pays-list').innerHTML = pH || 'None';
+    document.getElementById('rep-pays-total').innerText = fmtPlain(pT);
+
+    // Bring into view temporarily for capture
+    const container = document.getElementById('report-export-container');
+    container.style.top = '0px';
+    container.style.zIndex = '5000';
+
+    setTimeout(() => {
+        html2canvas(container, { backgroundColor: "#0a0a0f", scale: 2, logging: false, useCORS: true }).then(canvas => {
+            const dataUrl = canvas.toDataURL("image/png");
+            
+            // Hide template again
+            container.style.top = '-2000px';
+            container.style.zIndex = '-100';
+            
+            // Set results
+            document.getElementById('finalRepImg').src = dataUrl;
+            document.getElementById('repResult').style.display = 'block';
+            document.getElementById('loader').style.display = 'none';
+
+            // Auto-download attempt
+            const link = document.createElement('a');
+            link.download = `Ledger_Report_${date}.png`;
+            link.href = dataUrl;
+            link.click();
+            msg("Report Ready!");
+        });
+    }, 500);
+}
+
+function openRepInTab() {
+    const img = document.getElementById('finalRepImg').src;
+    if(img) {
+        const w = window.open("");
+        w.document.write(`<body style="margin:0; background:#0a0a0f; display:flex; align-items:center; justify-content:center;"><img src="${img}" style="max-width:100%;"></body>`);
     }
-}
-
-async function handleNewClient() {
-    const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local";
-    if(!n || db.c[n]) return msg("Enter Unique Name");
-    db.c[n] = { joined: getD(), city: c, lastShared: 'Never' };
-    db.o.push({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: getD(), type: 'join', remarks: '' }, customer: { name: n, city: c, lastShared: 'Never' } });
-    saveL(); document.getElementById('newCustName').value=''; document.getElementById('newCustCity').value='';
-    drawClientRegistry(); updateS(); syncOutbox(); msg("Client Registered!");
 }
 
 function updateS() {
@@ -569,164 +544,55 @@ function updateS() {
         const b = db.t.filter(t => t.name.toLowerCase() === n.toLowerCase()).reduce((s, t) => s + (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)), 0);
         if(b > 0) due += b;
     });
-    document.getElementById('header-total').innerText = shopFmt(Math.round(due / 100000)) + " L";
+    document.getElementById('header-total').innerText = (due / 100000).toFixed(2) + " L";
 }
 
-function generateReport(type) {
-    const targetDate = type === 'today' ? getD() : getD(-1);
-    const dayTxns = db.t.filter(t => t.date === targetDate && t.type !== 'join');
-    
-    if(dayTxns.length === 0) return msg("No transactions for " + type);
+// Logic for Shared Log
+function drawSharedLog() {
+    const l = document.getElementById('sharedLogList');
+    const sorted = [...db.t].filter(t => t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 30);
+    l.innerHTML = sorted.map(t => {
+        const isShared = t.remarks && t.remarks.includes('#');
+        return `<div class="txn-item" style="margin-bottom:6px; opacity: ${isShared ? 0.6 : 1}">
+            <div class="txn-header">
+                <span class="txn-name">${t.name}</span>
+                <span class="txn-amt" style="color:var(--${t.type==='bill'?'red':'grn'})">${fmt(t.amount)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <span class="txn-rem">${t.date} | ${t.remarks || ''}</span>
+                ${!isShared ? `<button onclick="markAsShared(${t.id})" style="font-size:9px; background:var(--bord); color:var(--acc); border:none; padding:4px 8px; border-radius:4px">MARK SHARED</button>` : `<span style="color:var(--grn); font-size:10px">✓ SHARED</span>`}
+            </div>
+        </div>`;
+    }).join('');
+}
 
-    const canvas = document.getElementById('reportCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    const bills = dayTxns.filter(it => it.type === 'bill');
-    const pays = dayTxns.filter(it => it.type === 'pay');
-    const maxItems = Math.max(bills.length, pays.length);
-    
-    const margin = 40, headerH = 120, rowH = 65, footerH = 120;
-    canvas.width = 1200; // Wider for side-by-side layout
-    canvas.height = headerH + (maxItems * rowH) + footerH + 40;
-
-    // BG
-    ctx.fillStyle = '#0a0a0f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Border
-    ctx.strokeStyle = '#f0c040';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-
-    // Header
-    ctx.fillStyle = '#f0c040';
-    ctx.font = 'bold 42px sans-serif';
-    ctx.fillText('LEDGER PRO', margin, 70);
-    ctx.fillStyle = '#8080a0';
-    ctx.font = '22px sans-serif';
-    ctx.fillText('TRANSACTION SUMMARY REPORT', margin, 105);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#e8e8f0';
-    ctx.fillText(targetDate.split('-').reverse().join('/'), canvas.width - margin, 70);
-    ctx.textAlign = 'left';
-
-    // Divider
-    ctx.strokeStyle = '#2a2a3a';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(margin, 130);
-    ctx.lineTo(canvas.width - margin, 130);
-    ctx.stroke();
-
-    // Column Headers
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillStyle = '#ff4d4d';
-    ctx.fillText('SALE (+)', margin + 10, 165);
-    ctx.fillStyle = '#00e676';
-    ctx.textAlign = 'right';
-    ctx.fillText('CASH (-)', canvas.width - margin - 10, 165);
-    ctx.textAlign = 'left';
-
-    let y = 210;
-    let totalSale = 0, totalPay = 0;
-
-    for (let i = 0; i < maxItems; i++) {
-        const b = bills[i], p = pays[i];
-
-        // Draw Sale Box (Left)
-        if (b) {
-            totalSale += b.amount;
-            ctx.fillStyle = '#1c1c28';
-            ctx.fillRect(margin, y - 35, (canvas.width/2) - margin - 10, 55);
-            ctx.strokeStyle = '#2a2a3a';
-            ctx.strokeRect(margin, y - 35, (canvas.width/2) - margin - 10, 55);
-            
-            ctx.fillStyle = '#e8e8f0';
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillText(b.name.toUpperCase(), margin + 15, y - 12);
-            ctx.font = '14px sans-serif';
-            ctx.fillStyle = '#8080a0';
-            ctx.fillText(b.remarks || '', margin + 15, y + 10);
-            
-            ctx.fillStyle = '#ff4d4d';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText(fmt(b.amount), (canvas.width/2) - 25, y);
-            ctx.textAlign = 'left';
-        }
-
-        // Draw Cash Box (Right)
-        if (p) {
-            totalPay += p.amount;
-            const startX = (canvas.width/2) + 10;
-            ctx.fillStyle = '#1c1c28';
-            ctx.fillRect(startX, y - 35, (canvas.width/2) - margin - 10, 55);
-            ctx.strokeStyle = '#2a2a3a';
-            ctx.strokeRect(startX, y - 35, (canvas.width/2) - margin - 10, 55);
-
-            ctx.fillStyle = '#e8e8f0';
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillText(p.name.toUpperCase(), startX + 15, y - 12);
-            ctx.font = '14px sans-serif';
-            ctx.fillStyle = '#8080a0';
-            ctx.fillText(p.remarks || '', startX + 15, y + 10);
-
-            ctx.fillStyle = '#00e676';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText(fmt(p.amount), canvas.width - margin - 15, y);
-            ctx.textAlign = 'left';
-        }
-
-        y += rowH;
+function markAsShared(id) {
+    const idx = db.t.findIndex(t => t.id === id);
+    if(idx !== -1) {
+        db.t[idx].remarks = (db.t[idx].remarks || "") + " #";
+        db.o.push({ action: 'updateTxn', txn: db.t[idx] });
+        saveL(); drawSharedLog(); syncOutbox();
     }
+}
 
-    // Footer
-    const footerY = canvas.height - footerH + 20;
-    ctx.strokeStyle = '#f0c040';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(margin, footerY - 20);
-    ctx.lineTo(canvas.width - margin, footerY - 20);
-    ctx.stroke();
-
-    ctx.fillStyle = '#e8e8f0';
-    ctx.font = '22px sans-serif';
-    ctx.fillText('TOTAL SALES:', margin, footerY + 25);
-    ctx.fillStyle = '#ff4d4d';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText(fmt(totalSale), margin + 180, footerY + 25);
-
-    ctx.fillStyle = '#e8e8f0';
-    ctx.font = '22px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('TOTAL CASH:', canvas.width - 280, footerY + 25);
-    ctx.fillStyle = '#00e676';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText(fmt(totalPay), canvas.width - margin, footerY + 25);
-
-    // Final Blob Download
-    canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `LP_Report_${targetDate}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        msg("Report Saved!");
-    }, 'image/png');
+function markAllAsShared() {
+    const today = getD();
+    let updated = false;
+    db.t.forEach(t => {
+        if(t.date === today && (!t.remarks || !t.remarks.includes('#'))) {
+            t.remarks = (t.remarks || "") + " #";
+            db.o.push({ action: 'updateTxn', txn: t });
+            updated = true;
+        }
+    });
+    if(updated) { saveL(); drawSharedLog(); syncOutbox(); msg("All Today's Entries Marked!"); }
+    else { msg("Nothing to mark"); }
 }
 
 function msg(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
-function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.autocomplete') && !e.target.closest('.row-item') && !e.target.closest('.modal')) { document.querySelectorAll('[id^="h-"]').forEach(p=>p.style.display='none'); document.querySelectorAll('.autocomplete').forEach(a=>a.style.display='none'); } }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('.autocomplete')) { document.querySelectorAll('.autocomplete').forEach(a=>a.style.display='none'); } }
 
-function initPTR() {
-    let sY = 0;
-    window.addEventListener('touchstart', (e) => { if(window.scrollY===0) sY=e.touches[0].pageY; }, {passive:true});
-    window.addEventListener('touchend', async (e) => { if(sY && e.changedTouches[0].pageY-sY > 90) { await pull(); msg("Data Refreshed"); } sY=0; });
-}
 window.onload = init;
 </script>
 </body>
