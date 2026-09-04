@@ -24,7 +24,7 @@
         /* Sections */
         .section { display: none; padding: 12px; min-height: 85vh; animation: fadeIn 0.2s ease-out; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 1; transform: translateY(0); } to { opacity: 1; transform: translateY(0); } }
         
         /* Cards & Forms */
         .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; margin-bottom: 12px; position: relative; }
@@ -39,18 +39,25 @@
 
         .btn-sub { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Daily Date Filter & Printer Bar */
-        .day-filter-bar { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+        /* Daily Date Filter & 58mm Printer Block (Now in Clients Tab) */
+        .day-filter-bar { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
         .day-filter-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .day-date-picker { width: auto !important; margin-bottom: 0 !important; padding: 8px 12px !important; font-size: 13px !important; color: #fff !important; background: #1c1c28 !important; border: 1px solid var(--bord) !important; border-radius: 8px !important; font-weight: 800 !important; }
         .day-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .stat-card { background: #1c1c28; border: 1px solid var(--bord); border-radius: 10px; padding: 10px 12px; }
         .stat-label { font-size: 10px; font-weight: 800; color: var(--mut); text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-val { font-size: 15px; font-weight: 900; font-family: monospace; margin-top: 2px; }
+        .stat-val { font-size: 16px; font-weight: 900; font-family: monospace; margin-top: 2px; }
         .printer-action-row { display: flex; gap: 8px; }
-        .btn-print-58 { flex: 2; background: var(--acc); color: #000; border: none; border-radius: 8px; padding: 10px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-bt-cfg { flex: 1; background: #1c1c28; border: 1px solid var(--bord); color: var(--txt); border-radius: 8px; padding: 10px; font-size: 11px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-print-58 { flex: 2; background: var(--acc); color: #000; border: none; border-radius: 8px; padding: 12px; font-size: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-bt-cfg { flex: 1; background: #1c1c28; border: 1px solid var(--bord); color: var(--txt); border-radius: 8px; padding: 12px; font-size: 11px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-bt-cfg.connected { border-color: var(--grn); color: var(--grn); }
+
+        /* Sheet Data Live Status & List View */
+        .sheet-status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--mut); }
+        .sheet-status-badge.live { color: var(--grn); }
+        .sheet-txn-box { background: #0c0c12; border: 1px solid #1f1f2e; border-radius: 10px; padding: 10px; margin-top: 8px; max-height: 240px; overflow-y: auto; }
+        .sheet-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #181824; font-size: 11px; }
+        .sheet-row:last-child { border-bottom: none; }
 
         /* Transaction Grid */
         .txn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
@@ -186,39 +193,6 @@
 
 <!-- Home Section -->
 <div id="sec-home" class="section active">
-    <!-- Daily Date Filter & 58mm Thermal Printer Section -->
-    <div class="day-filter-bar">
-        <div class="day-filter-top">
-            <div>
-                <span style="font-size:10px; font-weight:900; color:var(--acc); letter-spacing:0.5px">DAILY LEDGER & 58MM PRINT</span>
-                <div style="font-size:9px; color:var(--mut)">Select date for summary & printing</div>
-            </div>
-            <input type="date" id="dayFilterDate" class="day-date-picker" onchange="handleDayDateChange(this.value)">
-        </div>
-
-        <div class="day-stats-grid">
-            <div class="stat-card" style="border-left: 3px solid var(--red);">
-                <div class="stat-label">Total Sale Done</div>
-                <div id="dayTotalSale" class="stat-val" style="color:var(--red)">₹0</div>
-            </div>
-            <div class="stat-card" style="border-left: 3px solid var(--grn);">
-                <div class="stat-label">Total Payment Recv</div>
-                <div id="dayTotalPay" class="stat-val" style="color:var(--grn)">₹0</div>
-            </div>
-        </div>
-
-        <div class="printer-action-row">
-            <button class="btn-print-58" onclick="printDayLedger58mm()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                <span>PRINT 58MM</span>
-            </button>
-            <button id="btStatusBtn" class="btn-bt-cfg" onclick="connectBluetoothPrinter()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg>
-                <span id="btStatusLabel">PAIR BT</span>
-            </button>
-        </div>
-    </div>
-
     <div class="type-toggle">
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
         <button class="t-btn" id="bg" onclick="setT('pay')">PAYMENT (-)</button>
@@ -284,6 +258,50 @@
 
 <!-- Clients Section -->
 <div id="sec-add" class="section">
+    <!-- SHIFTED HERE FROM PHOTO: Daily Ledger & 58mm Thermal Printer Block -->
+    <div class="day-filter-bar">
+        <div class="day-filter-top">
+            <div>
+                <span style="font-size:11px; font-weight:900; color:var(--acc); letter-spacing:0.5px">DAILY LEDGER & 58MM PRINT</span>
+                <div style="font-size:9px; color:var(--mut)">Select date for summary & printing</div>
+            </div>
+            <input type="date" id="clientDayDate" class="day-date-picker" onchange="handleClientDateChange(this.value)">
+        </div>
+
+        <div class="day-stats-grid">
+            <div class="stat-card" style="border-left: 3px solid var(--red);">
+                <div class="stat-label">Total Sale Done</div>
+                <div id="clientTotalSale" class="stat-val" style="color:var(--red)">₹0</div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid var(--grn);">
+                <div class="stat-label">Total Payment Recv</div>
+                <div id="clientTotalPay" class="stat-val" style="color:var(--grn)">₹0</div>
+            </div>
+        </div>
+
+        <div class="printer-action-row">
+            <button class="btn-print-58" onclick="printDayLedger58mm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>PRINT 58MM</span>
+            </button>
+            <button id="btStatusBtn" class="btn-bt-cfg" onclick="connectBluetoothPrinter()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg>
+                <span id="btStatusLabel">PAIR BT</span>
+            </button>
+        </div>
+
+        <!-- Google Sheet Live Sync & Detail View for Tallying -->
+        <div style="margin-top:2px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="sheetStatusText" class="sheet-status-badge">Checking Google Sheet...</span>
+                <button style="background:transparent; border:none; color:var(--acc); font-size:10px; font-weight:800; cursor:pointer;" onclick="fetchAndDisplaySheetData()">REFRESH SHEET</button>
+            </div>
+            <div id="sheetTxnDisplay" class="sheet-txn-box">
+                <div style="text-align:center; color:var(--mut); font-size:10px; padding:10px 0;">Loading sheet transactions...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <h3 style="color:var(--acc); margin-bottom:12px; font-size:14px; font-weight:900">Add New Client</h3>
         <input id="newCustName" placeholder="Full Name">
@@ -318,7 +336,11 @@ let db = JSON.parse(localStorage.getItem('lp_ledger_v2') || '{"c":{},"t":[],"o":
 let currentlySyncingId = null;
 let currentSelectedCity = '';
 let currentStmtFromDate = '';
-let currentHomeDate = '';
+let currentClientDate = '';
+let bookScrollY = 0; // Preserves exact scroll position in books tab
+
+/* Live Google Sheet Verified Transactions */
+let sheetVerifiedTxns = [];
 
 /* Web Bluetooth Printer State */
 let bluetoothDevice = null;
@@ -348,7 +370,6 @@ function sanitizePhone(val) {
     return digits.length > 10 ? digits.slice(-10) : digits;
 }
 
-/* Extract phone number safely without returning 'undefined' */
 function getCustPhone(name) {
     const c = db.c[name];
     if (!c) return '';
@@ -372,17 +393,18 @@ function sanitizeDatabase() {
 
 function init() { 
     sanitizeDatabase();
-    currentHomeDate = getD();
+    currentClientDate = getD();
     currentStmtFromDate = getD(-7);
     
-    const dInput = document.getElementById('dayFilterDate');
-    if (dInput) dInput.value = currentHomeDate;
+    const clientDateInp = document.getElementById('clientDayDate');
+    if (clientDateInp) clientDateInp.value = currentClientDate;
 
     drawR(); 
     updateS(); 
     syncOutbox(); 
     initPTR(); 
-    if(db.t.length === 0) pull();
+    pull();
+    fetchAndDisplaySheetData();
 }
 
 async function syncOutbox() {
@@ -393,7 +415,7 @@ async function syncOutbox() {
     }
     document.getElementById('sync-indicator').classList.add('syncing');
     const task = db.o[0];
-    if (task.txn) currentlySyncingId = task.txn.id;
+    if (task.txn) currentlySyncId = task.txn.id;
     drawR();
     try {
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(task) });
@@ -433,7 +455,7 @@ function tab(n, b) {
     document.getElementById('sec-' + n).classList.add('active');
     if(b) b.classList.add('active');
     if(n === 'books') { setBookSubTab('list'); backToCities(); }
-    if(n === 'add') drawClientRegistry();
+    if(n === 'add') { drawClientRegistry(); fetchAndDisplaySheetData(); }
 }
 
 function setBookSubTab(t) {
@@ -494,41 +516,20 @@ function getSyncStatus(id) {
     return db.o.some(o => o.txn && o.txn.id === id) ? 'pending' : 'synced';
 }
 
-function handleDayDateChange(val) {
-    if (val) {
-        currentHomeDate = val;
-        drawR();
-    }
-}
-
 function drawR() {
     const container = document.getElementById('txn-list-container');
-    const selectedDate = currentHomeDate || getD();
-
-    // Filter transactions for the chosen date
-    const dayTxns = db.t.filter(t => t.date === selectedDate && t.type !== 'join');
-    
-    let totalSale = 0;
-    let totalPay = 0;
-    dayTxns.forEach(t => {
-        if (t.type === 'bill') totalSale += Number(t.amount) || 0;
-        if (t.type === 'pay') totalPay += Number(t.amount) || 0;
+    const recents = [...db.t].filter(t => t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 60);
+    const groups = [];
+    let currentGroup = null;
+    recents.forEach(t => {
+        if (!currentGroup || currentGroup.date !== t.date) { currentGroup = { date: t.date, items: [] }; groups.push(currentGroup); }
+        currentGroup.items.push(t);
     });
-
-    const saleEl = document.getElementById('dayTotalSale');
-    const payEl = document.getElementById('dayTotalPay');
-    if (saleEl) saleEl.innerText = fmt(totalSale);
-    if (payEl) payEl.innerText = fmt(totalPay);
-
-    const bills = dayTxns.filter(it => it.type === 'bill');
-    const pays = dayTxns.filter(it => it.type === 'pay');
-    const maxLen = Math.max(bills.length, pays.length);
-
-    let html = `<div class="date-separator">${selectedDate === getD() ? 'Today (' + selectedDate + ')' : selectedDate} • ${dayTxns.length} ENTRIES</div>`;
-
-    if (maxLen === 0) {
-        html += '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No transactions recorded for ' + selectedDate + '</div>';
-    } else {
+    
+    let html = '';
+    groups.forEach((g) => {
+        html += `<div class="date-separator">${g.date === getD() ? 'Today' : g.date}</div>`;
+        const bills = g.items.filter(it => it.type === 'bill'), pays = g.items.filter(it => it.type === 'pay'), maxLen = Math.max(bills.length, pays.length);
         for (let i = 0; i < maxLen; i++) {
             const bill = bills[i], pay = pays[i];
             html += `<div style="display:contents">`;
@@ -540,8 +541,8 @@ function drawR() {
             });
             html += `</div>`;
         }
-    }
-    container.innerHTML = html;
+    });
+    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries today</div>';
 }
 
 function openEditModal(id) {
@@ -562,7 +563,7 @@ function openEditModal(id) {
 }
 
 async function sub() {
-    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = currentHomeDate || getD();
+    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
     if(!n || isNaN(a) || !db.c[n]) return msg("Check Client Details");
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r };
     db.t.push(tx);
@@ -618,6 +619,7 @@ function drawBookList(q = '') {
 }
 
 function viewClientDirectly(name, city) { 
+    bookScrollY = window.scrollY || document.documentElement.scrollTop;
     document.getElementById('bookSearch').value = ''; 
     viewCityCustomers(city); 
     setTimeout(() => { toggleH(null, name); }, 150); 
@@ -739,6 +741,8 @@ function generateCustomerStatement(name, fromDate) {
 }
 
 function viewCityCustomers(city, q = '') {
+    // Save current scroll position before going into customer view
+    bookScrollY = window.scrollY || document.documentElement.scrollTop;
     currentSelectedCity = city;
     document.getElementById('cityListView').style.display = 'none';
     document.getElementById('customerListView').style.display = 'block';
@@ -872,11 +876,17 @@ function copyAndToggle(e, name) {
     toggleH(e, name); 
 }
 
+/* Back button strictly preserves scroll position without jumping to top */
 function backToCities() { 
     document.getElementById('cityListView').style.display = 'block'; 
     document.getElementById('customerListView').style.display = 'none'; 
     document.getElementById('bookSearch').value = ''; 
     drawBookList(); 
+    
+    // Restore preserved scroll position
+    setTimeout(() => {
+        window.scrollTo({ top: bookScrollY, behavior: 'instant' });
+    }, 10);
 }
 
 function toggleH(e, name) {
@@ -1000,7 +1010,139 @@ function updateS() {
 }
 
 /* ==========================================================================
-   58mm BLUETOOTH THERMAL PRINTER & ESC/POS FORMATTER
+   GOOGLE SHEETS DIRECT FETCH & LIVE SUMMARY (FOR CLIENTS TAB TALLY)
+   ========================================================================== */
+
+function handleClientDateChange(val) {
+    if (val) {
+        currentClientDate = val;
+        fetchAndDisplaySheetData();
+    }
+}
+
+function fetchAndDisplaySheetData() {
+    const selectedDate = currentClientDate || getD();
+    const statusBadge = document.getElementById('sheetStatusText');
+    const displayBox = document.getElementById('sheetTxnDisplay');
+
+    if (statusBadge) {
+        statusBadge.className = 'sheet-status-badge';
+        statusBadge.innerHTML = 'Connecting to Google Sheet...';
+    }
+
+    const c = 'sheetCb_' + Date.now();
+    window[c] = function(d) {
+        try {
+            if (d && d.txns) {
+                // Update local DB cache as well
+                db.t = d.txns;
+                if (d.customers) db.c = d.customers;
+                sanitizeDatabase();
+                saveL();
+                drawR();
+                updateS();
+
+                // Extract verified transactions strictly from Sheet data
+                sheetVerifiedTxns = d.txns.filter(t => t.date === selectedDate && t.type !== 'join');
+
+                let totalSale = 0;
+                let totalPay = 0;
+                sheetVerifiedTxns.forEach(t => {
+                    const amt = Number(t.amount) || 0;
+                    if (t.type === 'bill') totalSale += amt;
+                    else if (t.type === 'pay') totalPay += amt;
+                });
+
+                // Update summary UI elements
+                const saleEl = document.getElementById('clientTotalSale');
+                const payEl = document.getElementById('clientTotalPay');
+                if (saleEl) saleEl.innerText = fmt(totalSale);
+                if (payEl) payEl.innerText = fmt(totalPay);
+
+                if (statusBadge) {
+                    statusBadge.className = 'sheet-status-badge live';
+                    statusBadge.innerHTML = `🟢 Live Sheet Verified • ${sheetVerifiedTxns.length} records`;
+                }
+
+                // Render detail list for easy visual tallying
+                if (displayBox) {
+                    if (sheetVerifiedTxns.length === 0) {
+                        displayBox.innerHTML = `<div style="text-align:center; color:var(--mut); font-size:11px; padding:12px 0;">No entries found on Google Sheet for ${selectedDate}</div>`;
+                    } else {
+                        displayBox.innerHTML = sheetVerifiedTxns.map(t => {
+                            const isSale = t.type === 'bill';
+                            const phone = getCustPhone(t.name);
+                            const phoneTxt = phone ? ` • ${phone}` : '';
+                            return `
+                                <div class="sheet-row">
+                                    <div>
+                                        <b style="color:#fff">${t.name.toUpperCase()}</b>
+                                        <span style="color:var(--mut); font-size:9px;">${phoneTxt} ${t.remarks ? '• ' + t.remarks : ''}</span>
+                                    </div>
+                                    <div style="font-weight:900; font-family:monospace; color:${isSale ? 'var(--red)' : 'var(--grn)'}">
+                                        ${isSale ? '+ ' : '- '}${fmt(t.amount)}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+            } else {
+                fallbackToLocalCalculation(selectedDate);
+            }
+        } catch (err) {
+            console.error(err);
+            fallbackToLocalCalculation(selectedDate);
+        }
+    };
+
+    const s = document.createElement('script');
+    s.src = `${SCRIPT_URL}?action=getData&callback=${c}`;
+    s.onerror = () => fallbackToLocalCalculation(selectedDate);
+    document.body.appendChild(s);
+}
+
+function fallbackToLocalCalculation(selectedDate) {
+    sheetVerifiedTxns = db.t.filter(t => t.date === selectedDate && t.type !== 'join');
+    let totalSale = 0, totalPay = 0;
+    sheetVerifiedTxns.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'bill') totalSale += amt;
+        else if (t.type === 'pay') totalPay += amt;
+    });
+
+    const saleEl = document.getElementById('clientTotalSale');
+    const payEl = document.getElementById('clientTotalPay');
+    if (saleEl) saleEl.innerText = fmt(totalSale);
+    if (payEl) payEl.innerText = fmt(totalPay);
+
+    const statusBadge = document.getElementById('sheetStatusText');
+    if (statusBadge) {
+        statusBadge.className = 'sheet-status-badge';
+        statusBadge.innerHTML = 'Offline Cache View (Sync Pending)';
+    }
+
+    const displayBox = document.getElementById('sheetTxnDisplay');
+    if (displayBox) {
+        if (sheetVerifiedTxns.length === 0) {
+            displayBox.innerHTML = `<div style="text-align:center; color:var(--mut); font-size:11px; padding:12px 0;">No local entries for ${selectedDate}</div>`;
+        } else {
+            displayBox.innerHTML = sheetVerifiedTxns.map(t => {
+                const isSale = t.type === 'bill';
+                return `
+                    <div class="sheet-row">
+                        <div><b style="color:#fff">${t.name.toUpperCase()}</b> <small style="color:var(--mut)">${t.remarks||''}</small></div>
+                        <div style="font-weight:900; font-family:monospace; color:${isSale ? 'var(--red)' : 'var(--grn)'}">
+                            ${isSale ? '+ ' : '- '}${fmt(t.amount)}
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+    }
+}
+
+/* ==========================================================================
+   58mm BLUETOOTH THERMAL PRINTER (PRINTS DIRECTLY FROM SHEET VERIFIED DATA)
    ========================================================================== */
 
 function padLine32(leftStr, rightStr, maxLen = 32) {
@@ -1027,7 +1169,7 @@ async function connectBluetoothPrinter() {
         const device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: true,
             optionalServices: [
-                '000018f0-0000-1000-8000-00805f9b34fb', // Common ESC/POS service
+                '000018f0-0000-1000-8000-00805f9b34fb',
                 '0000e0ff-0000-1000-8000-00805f9b34fb',
                 '0000fff0-0000-1000-8000-00805f9b34fb',
                 '49535343-fe7d-4ae5-8fa9-9fafd205e455',
@@ -1072,7 +1214,6 @@ async function connectBluetoothPrinter() {
     }
 }
 
-/* Send ESC/POS payload in small 50-byte chunks */
 async function sendRawEscPos(buffer) {
     if (!bluetoothCharacteristic) return false;
     const chunkSize = 50;
@@ -1089,15 +1230,17 @@ async function sendRawEscPos(buffer) {
 }
 
 async function printDayLedger58mm() {
-    const selectedDate = currentHomeDate || getD();
-    const dayTxns = db.t.filter(t => t.date === selectedDate && t.type !== 'join');
+    const selectedDate = currentClientDate || getD();
+    const records = (sheetVerifiedTxns && sheetVerifiedTxns.length > 0)
+        ? sheetVerifiedTxns
+        : db.t.filter(t => t.date === selectedDate && t.type !== 'join');
 
-    if (dayTxns.length === 0) {
-        return msg("No transactions recorded for " + selectedDate);
+    if (records.length === 0) {
+        return msg("No verified transactions on Sheet for " + selectedDate);
     }
 
-    const sales = dayTxns.filter(t => t.type === 'bill');
-    const pays = dayTxns.filter(t => t.type === 'pay');
+    const sales = records.filter(t => t.type === 'bill');
+    const pays = records.filter(t => t.type === 'pay');
 
     let totalSale = 0;
     sales.forEach(s => totalSale += (Number(s.amount) || 0));
@@ -1110,7 +1253,7 @@ async function printDayLedger58mm() {
     // If Bluetooth is connected, generate ESC/POS command stream
     if (bluetoothCharacteristic) {
         try {
-            msg("Sending to 58mm printer...");
+            msg("Printing verified data to 58mm printer...");
             const esc = [];
             const textEncoder = new TextEncoder();
             const append = (str) => {
@@ -1127,6 +1270,7 @@ async function printDayLedger58mm() {
             esc.push(0x1B, 0x21, 0x30);
             append("LEDGER PRO\n");
             esc.push(0x1B, 0x21, 0x00); // Normal size
+            append("SHEET VERIFIED SUMMARY\n");
             append("DATE: " + dateFormatted + "\n");
             append("--------------------------------\n");
 
@@ -1144,6 +1288,7 @@ async function printDayLedger58mm() {
                 sales.forEach(s => {
                     const phone = getCustPhone(s.name);
                     const amtStr = fmt(s.amount);
+                    // Print full length name & amount
                     append(padLine32(s.name.toUpperCase(), amtStr) + "\n");
                     if (phone || s.remarks) {
                         const note = (phone ? "Ph:" + phone + " " : "") + (s.remarks || "");
@@ -1184,7 +1329,7 @@ async function printDayLedger58mm() {
             append(padLine32("TOTAL PAYMENT RECV:", fmt(totalPay)) + "\n");
             append("================================\n");
 
-            // Final Summary
+            // Final Net Summary
             append(padLine32("NET BALANCE:", fmt(totalSale - totalPay)) + "\n");
             append("================================\n\n\n\n");
             esc.push(0x1B, 0x45, 0x00);
@@ -1197,13 +1342,14 @@ async function printDayLedger58mm() {
             return;
         } catch (e) {
             console.error(e);
-            msg("Printer error. Falling back to print view...");
+            msg("Printer error. Showing 58mm preview...");
         }
     }
 
     // Fallback: System Print formatted strictly for 58mm roll
     let receiptHtml = `
         <div style="text-align:center; font-weight:900; font-size:16px;">LEDGER PRO</div>
+        <div style="text-align:center; font-size:11px;">GOOGLE SHEET VERIFIED</div>
         <div style="text-align:center; font-size:12px;">DATE: ${dateFormatted}</div>
         <div style="border-top:1px dashed #000; margin:6px 0;"></div>
         
@@ -1262,7 +1408,7 @@ async function printDayLedger58mm() {
             <span>NET BALANCE:</span>
             <span>${fmt(totalSale - totalPay)}</span>
         </div>
-        <div style="margin-top:20px; text-align:center; font-size:10px;">--- END OF RECEIPT ---</div>
+        <div style="margin-top:20px; text-align:center; font-size:10px;">--- GOOGLE SHEET VERIFIED ---</div>
     `;
 
     const printContainer = document.getElementById('printable-receipt');
@@ -1425,7 +1571,7 @@ function closeAllPanes(e) { if(!e.target.closest('.card') && !e.target.closest('
 function initPTR() {
     let sY = 0;
     window.addEventListener('touchstart', (e) => { if(window.scrollY===0) sY=e.touches[0].pageY; }, {passive:true});
-    window.addEventListener('touchend', async (e) => { if(sY && e.changedTouches[0].pageY-sY > 90) { await pull(); msg("Data Refreshed"); } sY=0; });
+    window.addEventListener('touchend', async (e) => { if(sY && e.changedTouches[0].pageY-sY > 90) { await pull(); fetchAndDisplaySheetData(); msg("Data Refreshed from Sheet"); } sY=0; });
 }
 window.onload = init;
 </script>
