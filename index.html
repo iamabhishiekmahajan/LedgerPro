@@ -39,10 +39,13 @@
 
         .btn-sub { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Daily Date Filter & 58mm Printer Block (Now in Clients Tab) */
+        /* Master Date Strip */
+        .master-date-bar { background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .date-input-compact { width: auto !important; margin-bottom: 0 !important; padding: 7px 10px !important; font-size: 13px !important; color: #fff !important; background: #1c1c28 !important; border: 1px solid var(--bord) !important; border-radius: 8px !important; font-weight: 800 !important; }
+        
+        /* Daily Date Filter & 58mm Printer Block (Clients Tab) */
         .day-filter-bar { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
         .day-filter-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .day-date-picker { width: auto !important; margin-bottom: 0 !important; padding: 8px 12px !important; font-size: 13px !important; color: #fff !important; background: #1c1c28 !important; border: 1px solid var(--bord) !important; border-radius: 8px !important; font-weight: 800 !important; }
         .day-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .stat-card { background: #1c1c28; border: 1px solid var(--bord); border-radius: 10px; padding: 10px 12px; }
         .stat-label { font-size: 10px; font-weight: 800; color: var(--mut); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -88,8 +91,6 @@
 
         /* Statement Filter Bar & Generator Controls */
         .stmt-filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; }
-        .stmt-date-input { width: auto !important; margin-bottom: 0 !important; padding: 7px 10px !important; font-size: 13px !important; color: #fff !important; background: #1c1c28 !important; border: 1px solid var(--bord) !important; border-radius: 8px !important; font-weight: 700 !important; }
-        
         .stmt-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222232; }
         .btn-wa { background: #25D366; color: #000; border: none; border-radius: 8px; padding: 9px 8px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.3px; transition: transform 0.1s, opacity 0.2s; }
         .btn-wa:active { opacity: 0.85; transform: scale(0.98); }
@@ -117,7 +118,6 @@
 
         .remark-toggle { font-size: 11px; color: var(--acc); margin: 4px 0 12px; cursor: pointer; display: inline-block; font-weight: 700; }
 
-        /* Hidden Receipt Container for Browser Print Fallback */
         @media print {
             body * { visibility: hidden; }
             #printable-receipt, #printable-receipt * { visibility: visible; }
@@ -143,15 +143,20 @@
 
 <div id="toast" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--acc); color:#000; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; z-index:9999; display:none; box-shadow:0 10px 20px rgba(0,0,0,0.4)"></div>
 
-<!-- Edit Transaction Modal -->
+<!-- Edit Transaction Modal (Includes Editable Date) -->
 <div id="modal-edit-txn" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
         <h2 style="font-size:16px; color:var(--acc); margin-bottom:16px">Edit Entry</h2>
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">TRANSACTION DATE</label>
+        <input id="editD" type="date">
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">AMOUNT</label>
         <input id="editA" type="number" placeholder="Amount" inputmode="decimal">
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">TYPE</label>
         <select id="editT">
             <option value="bill">SALE (+)</option>
             <option value="pay">PAYMENT (-)</option>
         </select>
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">REMARKS</label>
         <input id="editR" placeholder="Remarks">
         <div style="display:flex; gap:10px; margin-top:10px">
             <button class="btn-sub" style="background:var(--bord); color:var(--txt)" onclick="closeModal('modal-edit-txn')">CANCEL</button>
@@ -193,6 +198,18 @@
 
 <!-- Home Section -->
 <div id="sec-home" class="section active">
+    <!-- Master Date Bar (Defaults to Today, auto-populates all new transaction entries) -->
+    <div class="master-date-bar">
+        <div>
+            <div style="font-size: 10px; font-weight: 900; color: var(--acc); letter-spacing: 0.5px;">MASTER DATE</div>
+            <div style="font-size: 9px; color: var(--mut)">Applies to all new entries</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="date" id="masterTxnDate" class="date-input-compact" onchange="handleMasterDateChange(this.value)">
+            <button type="button" class="tab" style="background: #1c1c28; border: 1px solid var(--bord); color: var(--acc); padding: 6px 10px; font-size: 10px; border-radius: 8px; font-weight: 800;" onclick="resetMasterDateToToday()">TODAY</button>
+        </div>
+    </div>
+
     <div class="type-toggle">
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
         <button class="t-btn" id="bg" onclick="setT('pay')">PAYMENT (-)</button>
@@ -201,6 +218,10 @@
     <div id="form-card" class="card" style="display:none">
         <div id="cust-bal-preview" style="font-size:11px; margin-bottom:8px; display:none">
             <span style="color:var(--mut)">Current Balance: </span><span id="bal-val" style="color:var(--acc); font-weight:900"></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+            <span style="font-size: 11px; font-weight: 800; color: var(--mut); white-space: nowrap;">Entry Date:</span>
+            <input type="date" id="iDate" style="margin-bottom: 0; padding: 10px 12px; font-size: 14px;">
         </div>
         <div style="position:relative;">
             <input id="iN" placeholder="Customer Name" oninput="autoC('iN', 'auto', 'cust')" autocomplete="off">
@@ -240,7 +261,7 @@
                     <div style="font-size:10px; font-weight:900; color:var(--acc); letter-spacing:0.5px">STATEMENT FROM DATE</div>
                     <div style="font-size:9px; color:var(--mut)">Filter period & WhatsApp statements</div>
                 </div>
-                <input type="date" id="stmtFromDate" class="stmt-date-input" onchange="handleStmtDateChange(this.value)">
+                <input type="date" id="stmtFromDate" class="date-input-compact" onchange="handleStmtDateChange(this.value)">
             </div>
 
             <div id="customerList"></div>
@@ -258,20 +279,21 @@
 
 <!-- Clients Section -->
 <div id="sec-add" class="section">
-    <!-- SHIFTED HERE FROM PHOTO: Daily Ledger & 58mm Thermal Printer Block -->
+    <!-- Daily Ledger & 58mm Thermal Printer Block -->
     <div class="day-filter-bar">
         <div class="day-filter-top">
             <div>
                 <span style="font-size:11px; font-weight:900; color:var(--acc); letter-spacing:0.5px">DAILY LEDGER & 58MM PRINT</span>
                 <div style="font-size:9px; color:var(--mut)">Select date for summary & printing</div>
             </div>
-            <input type="date" id="clientDayDate" class="day-date-picker" onchange="handleClientDateChange(this.value)">
+            <input type="date" id="clientDayDate" class="date-input-compact" onchange="handleClientDateChange(this.value)">
         </div>
 
         <div class="day-stats-grid">
             <div class="stat-card" style="border-left: 3px solid var(--red);">
                 <div class="stat-label">Total Sale Done</div>
-                <div id="clientTotalSale" class="stat-val" style="color:var(--red)">₹0</div>
+                <!-- First character in cipher text -->
+                <div id="clientTotalSale" class="stat-val" style="color:var(--red)">0</div>
             </div>
             <div class="stat-card" style="border-left: 3px solid var(--grn);">
                 <div class="stat-label">Total Payment Recv</div>
@@ -337,7 +359,7 @@ let currentlySyncingId = null;
 let currentSelectedCity = '';
 let currentStmtFromDate = '';
 let currentClientDate = '';
-let bookScrollY = 0; // Preserves exact scroll position in books tab
+let bookScrollY = 0;
 
 /* Live Google Sheet Verified Transactions */
 let sheetVerifiedTxns = [];
@@ -359,7 +381,17 @@ const shopFmt = (n) => String(Math.abs(Math.round(n))).split('').map(d => SHOP_C
 const smartFmt = (n) => Math.abs(n) >= 30000 ? shopFmt(n) : '₹' + Number(n).toLocaleString('en-IN');
 const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
-/* Phone Number Sanitizer: completely prevents "undefined" glitches */
+/* First Character in Cipher Text for Total Sale Done */
+const saleCipherFmt = (n) => {
+    const rounded = Math.abs(Math.round(n));
+    if (rounded === 0) return '0';
+    const s = String(rounded);
+    const firstCipher = SHOP_CODE_MAP[s[0]] || s[0];
+    const formatted = Number(s).toLocaleString('en-IN');
+    return firstCipher + formatted.slice(1);
+};
+
+/* Phone Number Sanitizer: Prevents 'undefined' glitches */
 function sanitizePhone(val) {
     if (val === undefined || val === null) return '';
     let str = String(val).trim();
@@ -393,9 +425,16 @@ function sanitizeDatabase() {
 
 function init() { 
     sanitizeDatabase();
-    currentClientDate = getD();
+    const today = getD();
+    currentClientDate = today;
     currentStmtFromDate = getD(-7);
     
+    // Set Master Date and Entry Date to today by default
+    const mDate = document.getElementById('masterTxnDate');
+    const iDate = document.getElementById('iDate');
+    if (mDate) mDate.value = today;
+    if (iDate) iDate.value = today;
+
     const clientDateInp = document.getElementById('clientDayDate');
     if (clientDateInp) clientDateInp.value = currentClientDate;
 
@@ -407,6 +446,23 @@ function init() {
     fetchAndDisplaySheetData();
 }
 
+/* Master Date Handling */
+function handleMasterDateChange(val) {
+    if (val) {
+        const iDate = document.getElementById('iDate');
+        if (iDate) iDate.value = val;
+    }
+}
+
+function resetMasterDateToToday() {
+    const today = getD();
+    const mDate = document.getElementById('masterTxnDate');
+    const iDate = document.getElementById('iDate');
+    if (mDate) mDate.value = today;
+    if (iDate) iDate.value = today;
+    msg("Master date set to Today");
+}
+
 async function syncOutbox() {
     if (db.o.length === 0) { 
         currentlySyncingId = null; 
@@ -415,7 +471,7 @@ async function syncOutbox() {
     }
     document.getElementById('sync-indicator').classList.add('syncing');
     const task = db.o[0];
-    if (task.txn) currentlySyncId = task.txn.id;
+    if (task.txn) currentlySyncingId = task.txn.id;
     drawR();
     try {
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(task) });
@@ -471,6 +527,12 @@ function setT(t) {
     document.getElementById('br').className = t === 'bill' ? 't-btn active r' : 't-btn';
     document.getElementById('bg').className = t === 'pay' ? 't-btn active g' : 't-btn';
     document.getElementById('form-card').style.display = 'block';
+    
+    // Keep date aligned to master date
+    const mDate = document.getElementById('masterTxnDate');
+    const iDate = document.getElementById('iDate');
+    if (mDate && iDate && !iDate.value) iDate.value = mDate.value || getD();
+
     const s = document.getElementById('sBtn');
     s.style.background = t === 'bill' ? 'var(--red)' : 'var(--grn)';
     s.innerText = t === 'bill' ? 'POST SALE (+)' : 'POST PAYMENT (-)';
@@ -542,28 +604,38 @@ function drawR() {
             html += `</div>`;
         }
     });
-    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries today</div>';
+    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries recorded</div>';
 }
 
+/* Open Edit Modal with Editable Date */
 function openEditModal(id) {
     const tx = db.t.find(t => t.id === id);
     if(!tx) return;
+    document.getElementById('editD').value = tx.date || getD();
     document.getElementById('editA').value = tx.amount;
     document.getElementById('editT').value = tx.type;
     document.getElementById('editR').value = tx.remarks || '';
     document.getElementById('modal-edit-txn').style.display = 'flex';
     document.getElementById('save-edit-btn').onclick = () => {
+        tx.date = document.getElementById('editD').value || tx.date;
         tx.amount = parseFloat(document.getElementById('editA').value);
         tx.type = document.getElementById('editT').value;
         tx.remarks = document.getElementById('editR').value;
         db.o.push({ action: 'editTxn', txn: tx });
         saveL(); drawR(); updateS();
-        closeModal('modal-edit-txn'); syncOutbox();
+        closeModal('modal-edit-txn'); 
+        syncOutbox();
+        if (typeof fetchAndDisplaySheetData === 'function') fetchAndDisplaySheetData();
     };
 }
 
+/* Post Transaction taking Master / Editable Date */
 async function sub() {
-    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
+    const n = document.getElementById('iN').value.trim();
+    const a = parseFloat(document.getElementById('iA').value);
+    const r = document.getElementById('iR').value;
+    const d = document.getElementById('iDate').value || document.getElementById('masterTxnDate').value || getD();
+    
     if(!n || isNaN(a) || !db.c[n]) return msg("Check Client Details");
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r };
     db.t.push(tx);
@@ -574,6 +646,9 @@ async function sub() {
     document.getElementById('modal-success').style.display = 'flex';
     document.getElementById('iN').value=''; document.getElementById('iA').value=''; document.getElementById('iR').value='';
     document.getElementById('iR').style.display='none'; document.getElementById('cust-bal-preview').style.display='none';
+    
+    // Retain Master Date for consecutive data entry batches
+    document.getElementById('iDate').value = document.getElementById('masterTxnDate').value || getD();
     syncOutbox();
 }
 
@@ -674,7 +749,7 @@ function getCustTargetPct(name) {
     return null;
 }
 
-/* Statement Generator Engine */
+/* WhatsApp Statement Generator */
 function generateCustomerStatement(name, fromDate) {
     const startDate = fromDate || getStatementStartDate();
     const allTxns = db.t.filter(t => t.name.toLowerCase() === name.toLowerCase()).sort((a,b) => {
@@ -741,7 +816,6 @@ function generateCustomerStatement(name, fromDate) {
 }
 
 function viewCityCustomers(city, q = '') {
-    // Save current scroll position before going into customer view
     bookScrollY = window.scrollY || document.documentElement.scrollTop;
     currentSelectedCity = city;
     document.getElementById('cityListView').style.display = 'none';
@@ -876,14 +950,13 @@ function copyAndToggle(e, name) {
     toggleH(e, name); 
 }
 
-/* Back button strictly preserves scroll position without jumping to top */
+/* Back button strictly preserves scroll position */
 function backToCities() { 
     document.getElementById('cityListView').style.display = 'block'; 
     document.getElementById('customerListView').style.display = 'none'; 
     document.getElementById('bookSearch').value = ''; 
     drawBookList(); 
     
-    // Restore preserved scroll position
     setTimeout(() => {
         window.scrollTo({ top: bookScrollY, behavior: 'instant' });
     }, 10);
@@ -923,7 +996,7 @@ function markAllAsShared() {
     saveL(); drawSharedLog(); syncOutbox(); msg(`Marked ${updatedCount} clients`);
 }
 
-/* Client Registry & Profile Editing (Name, City, Phone) */
+/* Client Registry & Profile Editing */
 function drawClientRegistry() {
     const r = document.getElementById('clientRegistry');
     r.innerHTML = Object.keys(db.c).sort().map(n => {
@@ -1010,7 +1083,7 @@ function updateS() {
 }
 
 /* ==========================================================================
-   GOOGLE SHEETS DIRECT FETCH & LIVE SUMMARY (FOR CLIENTS TAB TALLY)
+   GOOGLE SHEETS DIRECT FETCH & LIVE SUMMARY (CIPHER FORMAT ON TOTAL SALE)
    ========================================================================== */
 
 function handleClientDateChange(val) {
@@ -1034,7 +1107,6 @@ function fetchAndDisplaySheetData() {
     window[c] = function(d) {
         try {
             if (d && d.txns) {
-                // Update local DB cache as well
                 db.t = d.txns;
                 if (d.customers) db.c = d.customers;
                 sanitizeDatabase();
@@ -1042,7 +1114,6 @@ function fetchAndDisplaySheetData() {
                 drawR();
                 updateS();
 
-                // Extract verified transactions strictly from Sheet data
                 sheetVerifiedTxns = d.txns.filter(t => t.date === selectedDate && t.type !== 'join');
 
                 let totalSale = 0;
@@ -1053,10 +1124,10 @@ function fetchAndDisplaySheetData() {
                     else if (t.type === 'pay') totalPay += amt;
                 });
 
-                // Update summary UI elements
+                // Total Sale displays with first character as cipher text
                 const saleEl = document.getElementById('clientTotalSale');
                 const payEl = document.getElementById('clientTotalPay');
-                if (saleEl) saleEl.innerText = fmt(totalSale);
+                if (saleEl) saleEl.innerText = saleCipherFmt(totalSale);
                 if (payEl) payEl.innerText = fmt(totalPay);
 
                 if (statusBadge) {
@@ -1064,7 +1135,6 @@ function fetchAndDisplaySheetData() {
                     statusBadge.innerHTML = `🟢 Live Sheet Verified • ${sheetVerifiedTxns.length} records`;
                 }
 
-                // Render detail list for easy visual tallying
                 if (displayBox) {
                     if (sheetVerifiedTxns.length === 0) {
                         displayBox.innerHTML = `<div style="text-align:center; color:var(--mut); font-size:11px; padding:12px 0;">No entries found on Google Sheet for ${selectedDate}</div>`;
@@ -1113,7 +1183,7 @@ function fallbackToLocalCalculation(selectedDate) {
 
     const saleEl = document.getElementById('clientTotalSale');
     const payEl = document.getElementById('clientTotalPay');
-    if (saleEl) saleEl.innerText = fmt(totalSale);
+    if (saleEl) saleEl.innerText = saleCipherFmt(totalSale);
     if (payEl) payEl.innerText = fmt(totalPay);
 
     const statusBadge = document.getElementById('sheetStatusText');
@@ -1142,7 +1212,7 @@ function fallbackToLocalCalculation(selectedDate) {
 }
 
 /* ==========================================================================
-   58mm BLUETOOTH THERMAL PRINTER (PRINTS DIRECTLY FROM SHEET VERIFIED DATA)
+   58mm BLUETOOTH THERMAL PRINTER
    ========================================================================== */
 
 function padLine32(leftStr, rightStr, maxLen = 32) {
@@ -1250,10 +1320,9 @@ async function printDayLedger58mm() {
 
     const dateFormatted = selectedDate.split('-').reverse().join('/');
 
-    // If Bluetooth is connected, generate ESC/POS command stream
     if (bluetoothCharacteristic) {
         try {
-            msg("Printing verified data to 58mm printer...");
+            msg("Printing to 58mm printer...");
             const esc = [];
             const textEncoder = new TextEncoder();
             const append = (str) => {
@@ -1261,26 +1330,20 @@ async function printDayLedger58mm() {
                 for (let b of bytes) esc.push(b);
             };
 
-            // Init printer
             esc.push(0x1B, 0x40);
-
-            // Center Align Header
             esc.push(0x1B, 0x61, 0x01);
-            // Double height & bold header
             esc.push(0x1B, 0x21, 0x30);
             append("LEDGER PRO\n");
-            esc.push(0x1B, 0x21, 0x00); // Normal size
+            esc.push(0x1B, 0x21, 0x00);
             append("SHEET VERIFIED SUMMARY\n");
             append("DATE: " + dateFormatted + "\n");
             append("--------------------------------\n");
-
-            // Left Align
             esc.push(0x1B, 0x61, 0x00);
 
             // 1. FIRST PRINT SALE IN BOLD FULL LENGTH
-            esc.push(0x1B, 0x45, 0x01); // Bold ON
+            esc.push(0x1B, 0x45, 0x01);
             append("=== SALES / BILLS (+) ===\n");
-            esc.push(0x1B, 0x45, 0x00); // Bold OFF
+            esc.push(0x1B, 0x45, 0x00);
 
             if (sales.length === 0) {
                 append("No Sales\n");
@@ -1288,7 +1351,6 @@ async function printDayLedger58mm() {
                 sales.forEach(s => {
                     const phone = getCustPhone(s.name);
                     const amtStr = fmt(s.amount);
-                    // Print full length name & amount
                     append(padLine32(s.name.toUpperCase(), amtStr) + "\n");
                     if (phone || s.remarks) {
                         const note = (phone ? "Ph:" + phone + " " : "") + (s.remarks || "");
@@ -1297,17 +1359,16 @@ async function printDayLedger58mm() {
                 });
             }
 
-            // Bold Sale Subtotal
             esc.push(0x1B, 0x45, 0x01);
             append("--------------------------------\n");
             append(padLine32("TOTAL SALE DONE:", fmt(totalSale)) + "\n");
             append("--------------------------------\n\n");
             esc.push(0x1B, 0x45, 0x00);
 
-            // 2. PAYMENT ONE ALSO (CUSTOMER DETAILS & AMOUNT)
-            esc.push(0x1B, 0x45, 0x01); // Bold ON
+            // 2. PAYMENT ONE ALSO
+            esc.push(0x1B, 0x45, 0x01);
             append("=== CASH / PAYMENTS (-) ===\n");
-            esc.push(0x1B, 0x45, 0x00); // Bold OFF
+            esc.push(0x1B, 0x45, 0x00);
 
             if (pays.length === 0) {
                 append("No Payments\n");
@@ -1323,18 +1384,13 @@ async function printDayLedger58mm() {
                 });
             }
 
-            // Bold Payment Subtotal
             esc.push(0x1B, 0x45, 0x01);
             append("--------------------------------\n");
             append(padLine32("TOTAL PAYMENT RECV:", fmt(totalPay)) + "\n");
             append("================================\n");
-
-            // Final Net Summary
             append(padLine32("NET BALANCE:", fmt(totalSale - totalPay)) + "\n");
             append("================================\n\n\n\n");
             esc.push(0x1B, 0x45, 0x00);
-
-            // Cut feed
             esc.push(0x1D, 0x56, 0x41, 0x10);
 
             await sendRawEscPos(new Uint8Array(esc));
@@ -1346,7 +1402,7 @@ async function printDayLedger58mm() {
         }
     }
 
-    // Fallback: System Print formatted strictly for 58mm roll
+    // System Print Fallback
     let receiptHtml = `
         <div style="text-align:center; font-weight:900; font-size:16px;">LEDGER PRO</div>
         <div style="text-align:center; font-size:11px;">GOOGLE SHEET VERIFIED</div>
@@ -1435,16 +1491,13 @@ function generateReport(type) {
     canvas.width = 1200;
     canvas.height = headerH + (maxItems * rowH) + footerH + 40;
 
-    // Background
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Border
     ctx.strokeStyle = '#f0c040';
     ctx.lineWidth = 4;
     ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-    // Header
     ctx.fillStyle = '#f0c040';
     ctx.font = 'bold 42px sans-serif';
     ctx.fillText('LEDGER PRO', margin, 70);
@@ -1456,7 +1509,6 @@ function generateReport(type) {
     ctx.fillText(targetDate.split('-').reverse().join('/'), canvas.width - margin, 70);
     ctx.textAlign = 'left';
 
-    // Divider
     ctx.strokeStyle = '#2a2a3a';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1464,7 +1516,6 @@ function generateReport(type) {
     ctx.lineTo(canvas.width - margin, 130);
     ctx.stroke();
 
-    // Column Headers
     ctx.font = 'bold 20px sans-serif';
     ctx.fillStyle = '#ff4d4d';
     ctx.fillText('SALE (+)', margin + 10, 165);
@@ -1479,7 +1530,6 @@ function generateReport(type) {
     for (let i = 0; i < maxItems; i++) {
         const b = bills[i], p = pays[i];
 
-        // Draw Sale Box (Left)
         if (b) {
             totalSale += b.amount;
             ctx.fillStyle = '#1c1c28';
@@ -1501,7 +1551,6 @@ function generateReport(type) {
             ctx.textAlign = 'left';
         }
 
-        // Draw Cash Box (Right)
         if (p) {
             totalPay += p.amount;
             const startX = (canvas.width/2) + 10;
@@ -1527,7 +1576,6 @@ function generateReport(type) {
         y += rowH;
     }
 
-    // Footer
     const footerY = canvas.height - footerH + 20;
     ctx.strokeStyle = '#f0c040';
     ctx.lineWidth = 2;
@@ -1551,7 +1599,6 @@ function generateReport(type) {
     ctx.font = 'bold 28px sans-serif';
     ctx.fillText(fmt(totalPay), canvas.width - margin, footerY + 25);
 
-    // Final Blob Download
     canvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
