@@ -24,7 +24,7 @@
         /* Sections */
         .section { display: none; padding: 12px; min-height: 85vh; animation: fadeIn 0.2s ease-out; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 1; transform: translateY(0); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Cards & Forms */
         .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; margin-bottom: 12px; position: relative; }
@@ -39,6 +39,19 @@
 
         .btn-sub { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         
+        /* Daily Date Filter & Printer Bar */
+        .day-filter-bar { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .day-filter-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .day-date-picker { width: auto !important; margin-bottom: 0 !important; padding: 8px 12px !important; font-size: 13px !important; color: #fff !important; background: #1c1c28 !important; border: 1px solid var(--bord) !important; border-radius: 8px !important; font-weight: 800 !important; }
+        .day-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-card { background: #1c1c28; border: 1px solid var(--bord); border-radius: 10px; padding: 10px 12px; }
+        .stat-label { font-size: 10px; font-weight: 800; color: var(--mut); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-val { font-size: 15px; font-weight: 900; font-family: monospace; margin-top: 2px; }
+        .printer-action-row { display: flex; gap: 8px; }
+        .btn-print-58 { flex: 2; background: var(--acc); color: #000; border: none; border-radius: 8px; padding: 10px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-bt-cfg { flex: 1; background: #1c1c28; border: 1px solid var(--bord); color: var(--txt); border-radius: 8px; padding: 10px; font-size: 11px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-bt-cfg.connected { border-color: var(--grn); color: var(--grn); }
+
         /* Transaction Grid */
         .txn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
         .date-separator { grid-column: span 2; padding: 12px 4px 4px; font-size: 10px; font-weight: 900; color: var(--mut); text-transform: uppercase; letter-spacing: 1px; }
@@ -96,6 +109,13 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .remark-toggle { font-size: 11px; color: var(--acc); margin: 4px 0 12px; cursor: pointer; display: inline-block; font-weight: 700; }
+
+        /* Hidden Receipt Container for Browser Print Fallback */
+        @media print {
+            body * { visibility: hidden; }
+            #printable-receipt, #printable-receipt * { visibility: visible; }
+            #printable-receipt { position: absolute; left: 0; top: 0; width: 58mm; color: #000; font-family: monospace; font-size: 11px; padding: 4px; }
+        }
     </style>
 </head>
 <body onclick="closeAllPanes(event)">
@@ -116,7 +136,7 @@
 
 <div id="toast" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--acc); color:#000; padding:10px 20px; border-radius:12px; font-size:12px; font-weight:900; z-index:9999; display:none; box-shadow:0 10px 20px rgba(0,0,0,0.4)"></div>
 
-<!-- Edit Entry Modal -->
+<!-- Edit Transaction Modal -->
 <div id="modal-edit-txn" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
         <h2 style="font-size:16px; color:var(--acc); margin-bottom:16px">Edit Entry</h2>
@@ -133,6 +153,24 @@
     </div>
 </div>
 
+<!-- Edit Client (Name, City, Phone) Modal -->
+<div id="modal-edit-client" class="modal-overlay">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2 style="font-size:16px; color:var(--acc); margin-bottom:16px">Edit Client Profile</h2>
+        <input id="editClientOldName" type="hidden">
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">CUSTOMER NAME</label>
+        <input id="editClientName" placeholder="Client Name">
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">CITY / BAZAR</label>
+        <input id="editClientCity" placeholder="City">
+        <label style="font-size:10px; color:var(--mut); text-align:left; display:block; margin-bottom:4px; font-weight:800">PHONE / WHATSAPP NUMBER</label>
+        <input id="editClientPhone" type="tel" placeholder="10-digit mobile number">
+        <div style="display:flex; gap:10px; margin-top:10px">
+            <button class="btn-sub" style="background:var(--bord); color:var(--txt)" onclick="closeModal('modal-edit-client')">CANCEL</button>
+            <button id="save-client-btn" class="btn-sub" style="background:var(--acc); color:#000" onclick="saveClientProfile()">UPDATE</button>
+        </div>
+    </div>
+</div>
+
 <!-- Success Modal -->
 <div id="modal-success" class="modal-overlay" onclick="closeModal('modal-success')">
     <div class="modal" onclick="event.stopPropagation()">
@@ -143,8 +181,44 @@
     </div>
 </div>
 
+<!-- Printable 58mm Container (Fallback) -->
+<div id="printable-receipt" style="display:none"></div>
+
 <!-- Home Section -->
 <div id="sec-home" class="section active">
+    <!-- Daily Date Filter & 58mm Thermal Printer Section -->
+    <div class="day-filter-bar">
+        <div class="day-filter-top">
+            <div>
+                <span style="font-size:10px; font-weight:900; color:var(--acc); letter-spacing:0.5px">DAILY LEDGER & 58MM PRINT</span>
+                <div style="font-size:9px; color:var(--mut)">Select date for summary & printing</div>
+            </div>
+            <input type="date" id="dayFilterDate" class="day-date-picker" onchange="handleDayDateChange(this.value)">
+        </div>
+
+        <div class="day-stats-grid">
+            <div class="stat-card" style="border-left: 3px solid var(--red);">
+                <div class="stat-label">Total Sale Done</div>
+                <div id="dayTotalSale" class="stat-val" style="color:var(--red)">₹0</div>
+            </div>
+            <div class="stat-card" style="border-left: 3px solid var(--grn);">
+                <div class="stat-label">Total Payment Recv</div>
+                <div id="dayTotalPay" class="stat-val" style="color:var(--grn)">₹0</div>
+            </div>
+        </div>
+
+        <div class="printer-action-row">
+            <button class="btn-print-58" onclick="printDayLedger58mm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>PRINT 58MM</span>
+            </button>
+            <button id="btStatusBtn" class="btn-bt-cfg" onclick="connectBluetoothPrinter()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg>
+                <span id="btStatusLabel">PAIR BT</span>
+            </button>
+        </div>
+    </div>
+
     <div class="type-toggle">
         <button class="t-btn" id="br" onclick="setT('bill')">SALE (+)</button>
         <button class="t-btn" id="bg" onclick="setT('pay')">PAYMENT (-)</button>
@@ -244,6 +318,11 @@ let db = JSON.parse(localStorage.getItem('lp_ledger_v2') || '{"c":{},"t":[],"o":
 let currentlySyncingId = null;
 let currentSelectedCity = '';
 let currentStmtFromDate = '';
+let currentHomeDate = '';
+
+/* Web Bluetooth Printer State */
+let bluetoothDevice = null;
+let bluetoothCharacteristic = null;
 
 const SHOP_CODE_MAP = { '1':'K', '2':'A', '3':'N', '4':'P', '5':'U', '6':'R', '7':'C', '8':'I', '9':'T', '0':'Y' };
 
@@ -258,8 +337,47 @@ const shopFmt = (n) => String(Math.abs(Math.round(n))).split('').map(d => SHOP_C
 const smartFmt = (n) => Math.abs(n) >= 30000 ? shopFmt(n) : '₹' + Number(n).toLocaleString('en-IN');
 const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
+/* Phone Number Sanitizer: completely prevents "undefined" glitches */
+function sanitizePhone(val) {
+    if (val === undefined || val === null) return '';
+    let str = String(val).trim();
+    if (str.toLowerCase() === 'undefined' || str.toLowerCase() === 'null' || str === 'NaN') return '';
+    const digits = str.replace(/\D/g, '');
+    if (digits.length === 10) return digits;
+    if (digits.length > 10 && digits.startsWith('91')) return digits.slice(2, 12);
+    return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+/* Extract phone number safely without returning 'undefined' */
+function getCustPhone(name) {
+    const c = db.c[name];
+    if (!c) return '';
+    const candidates = [c.phone, c.mobile, c.joinedDate, c.joined, c.remarks];
+    for (const f of candidates) {
+        const clean = sanitizePhone(f);
+        if (clean.length === 10) return clean;
+    }
+    return '';
+}
+
+function sanitizeDatabase() {
+    if (db.c) {
+        Object.keys(db.c).forEach(n => {
+            const p = sanitizePhone(db.c[n].phone || db.c[n].mobile);
+            db.c[n].phone = p;
+            if (db.c[n].mobile) db.c[n].mobile = p;
+        });
+    }
+}
+
 function init() { 
+    sanitizeDatabase();
+    currentHomeDate = getD();
     currentStmtFromDate = getD(-7);
+    
+    const dInput = document.getElementById('dayFilterDate');
+    if (dInput) dInput.value = currentHomeDate;
+
     drawR(); 
     updateS(); 
     syncOutbox(); 
@@ -297,6 +415,7 @@ async function pull() {
         if(d.txns) { 
             db.t = d.txns; 
             db.c = d.customers || {}; 
+            sanitizeDatabase();
             saveL(); 
             drawR(); 
             updateS(); 
@@ -342,11 +461,14 @@ function autoC(inId, auId, type) {
     if (type === 'cust') {
         Object.keys(db.c).forEach(n => {
             const city = db.c[n].city || "";
-            if (n.toLowerCase().includes(v) || city.toLowerCase().includes(v)) m.push({ name: n, extra: city });
+            const phone = getCustPhone(n);
+            if (n.toLowerCase().includes(v) || city.toLowerCase().includes(v) || phone.includes(v)) {
+                m.push({ name: n, extra: city + (phone ? ` • ${phone}` : '') });
+            }
         });
     } else {
         const cities = [...new Set(Object.values(db.c).map(c => c.city))];
-        cities.forEach(c => { if (c.toLowerCase().includes(v)) m.push({ name: c, extra: '' }); });
+        cities.forEach(c => { if (c && c.toLowerCase().includes(v)) m.push({ name: c, extra: '' }); });
     }
     a.innerHTML = m.map(item => `<div class="auto-item" onclick="sel('${item.name.replace(/'/g,"\\'")}','${inId}','${auId}','${type}')"><span>${item.name}</span>${item.extra ? `<small style="color:var(--mut); font-size:10px">${item.extra}</small>` : ''}</div>`).join('');
     a.style.display = m.length ? 'block' : 'none';
@@ -372,20 +494,41 @@ function getSyncStatus(id) {
     return db.o.some(o => o.txn && o.txn.id === id) ? 'pending' : 'synced';
 }
 
+function handleDayDateChange(val) {
+    if (val) {
+        currentHomeDate = val;
+        drawR();
+    }
+}
+
 function drawR() {
     const container = document.getElementById('txn-list-container');
-    const recents = [...db.t].filter(t => t.type !== 'join').sort((a,b) => b.id - a.id).slice(0, 60);
-    const groups = [];
-    let currentGroup = null;
-    recents.forEach(t => {
-        if (!currentGroup || currentGroup.date !== t.date) { currentGroup = { date: t.date, items: [] }; groups.push(currentGroup); }
-        currentGroup.items.push(t);
-    });
+    const selectedDate = currentHomeDate || getD();
+
+    // Filter transactions for the chosen date
+    const dayTxns = db.t.filter(t => t.date === selectedDate && t.type !== 'join');
     
-    let html = '';
-    groups.forEach((g) => {
-        html += `<div class="date-separator">${g.date === getD() ? 'Today' : g.date}</div>`;
-        const bills = g.items.filter(it => it.type === 'bill'), pays = g.items.filter(it => it.type === 'pay'), maxLen = Math.max(bills.length, pays.length);
+    let totalSale = 0;
+    let totalPay = 0;
+    dayTxns.forEach(t => {
+        if (t.type === 'bill') totalSale += Number(t.amount) || 0;
+        if (t.type === 'pay') totalPay += Number(t.amount) || 0;
+    });
+
+    const saleEl = document.getElementById('dayTotalSale');
+    const payEl = document.getElementById('dayTotalPay');
+    if (saleEl) saleEl.innerText = fmt(totalSale);
+    if (payEl) payEl.innerText = fmt(totalPay);
+
+    const bills = dayTxns.filter(it => it.type === 'bill');
+    const pays = dayTxns.filter(it => it.type === 'pay');
+    const maxLen = Math.max(bills.length, pays.length);
+
+    let html = `<div class="date-separator">${selectedDate === getD() ? 'Today (' + selectedDate + ')' : selectedDate} • ${dayTxns.length} ENTRIES</div>`;
+
+    if (maxLen === 0) {
+        html += '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No transactions recorded for ' + selectedDate + '</div>';
+    } else {
         for (let i = 0; i < maxLen; i++) {
             const bill = bills[i], pay = pays[i];
             html += `<div style="display:contents">`;
@@ -397,8 +540,8 @@ function drawR() {
             });
             html += `</div>`;
         }
-    });
-    container.innerHTML = html || '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--mut)">No entries today</div>';
+    }
+    container.innerHTML = html;
 }
 
 function openEditModal(id) {
@@ -419,7 +562,7 @@ function openEditModal(id) {
 }
 
 async function sub() {
-    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = getD();
+    const n = document.getElementById('iN').value.trim(), a = parseFloat(document.getElementById('iA').value), r = document.getElementById('iR').value, d = currentHomeDate || getD();
     if(!n || isNaN(a) || !db.c[n]) return msg("Check Client Details");
     const tx = { id: Date.now(), name: n, amount: a, date: d, type: curT, remarks: r };
     db.t.push(tx);
@@ -448,10 +591,13 @@ function drawBookList(q = '') {
     let cities = {}, globalCustomers = [];
     Object.keys(db.c).forEach(n => {
         const city = db.c[n].city || "Local";
+        const phone = getCustPhone(n);
         const bal = db.t.filter(t => t.name.toLowerCase() === n.toLowerCase()).reduce((s, t) => s + (t.type==='bill'?t.amount:(t.type==='pay'?-t.amount:0)), 0);
         if(!cities[city]) cities[city] = 0;
         cities[city] += Math.max(0, bal);
-        if (query.length > 0 && n.toLowerCase().includes(query)) globalCustomers.push({ name: n, city: city, bal: bal });
+        if (query.length > 0 && (n.toLowerCase().includes(query) || phone.includes(query))) {
+            globalCustomers.push({ name: n, city: city, bal: bal, phone });
+        }
     });
     
     let html = '';
@@ -459,7 +605,8 @@ function drawBookList(q = '') {
         if (globalCustomers.length > 0) {
             html += `<div style="font-size:10px; font-weight:900; color:var(--acc); margin:10px 4px">RESULTS</div>`;
             globalCustomers.sort((a,b) => b.bal - a.bal).forEach(c => {
-                html += `<div class="row-item" onclick="viewClientDirectly('${c.name.replace(/'/g,"\\'")}', '${c.city.replace(/'/g,"\\'")}')"><div><span class="row-name">${c.name}</span><div class="row-sub">${c.city}</div></div><b class="row-val" style="color:var(--${c.bal>=0?'red':'grn'})">${smartFmt(c.bal)}</b></div>`;
+                const phoneSub = c.phone ? ` • ${c.phone}` : '';
+                html += `<div class="row-item" onclick="viewClientDirectly('${c.name.replace(/'/g,"\\'")}', '${c.city.replace(/'/g,"\\'")}')"><div><span class="row-name">${c.name}</span><div class="row-sub">${c.city}${phoneSub}</div></div><b class="row-val" style="color:var(--${c.bal>=0?'red':'grn'})">${smartFmt(c.bal)}</b></div>`;
             });
         } else { html += '<div style="text-align:center; padding:40px; color:var(--mut)">No matches</div>'; }
     } else {
@@ -523,21 +670,6 @@ function getCustTargetPct(name) {
     }
 
     return null;
-}
-
-/* Extract Phone Number from metadata */
-function getCustPhone(name) {
-    const c = db.c[name] || {};
-    const fields = [c.phone, c.mobile, c.joinedDate, c.joined, c.remarks];
-    for (const f of fields) {
-        if (!f) continue;
-        const str = String(f).trim();
-        const m91 = str.match(/\b91([6-9]\d{9})\b/);
-        if (m91) return m91[1];
-        const m10 = str.match(/\b([6-9]\d{9})\b/);
-        if (m10) return m10[1];
-    }
-    return '';
 }
 
 /* Statement Generator Engine */
@@ -625,7 +757,6 @@ function viewCityCustomers(city, q = '') {
 
     cityCustomers.forEach(n => {
         const stmt = generateCustomerStatement(n, startDate);
-        // Zero Activity Filter: Jinka balance 0 hai aur is period me koi transaction nahi hui, unhe list me se hide rakhein
         if (stmt.finalBal === 0 && stmt.periodTxnsCount === 0) {
             return;
         }
@@ -687,11 +818,8 @@ function sendWhatsAppStatement(e, name) {
     if (!phone) {
         const input = prompt("Enter 10-digit WhatsApp phone number for " + name + ":");
         if (input) {
-            const clean = input.replace(/\D/g, '');
-            if (clean.length === 10) phone = clean;
-            else if (clean.length > 10 && clean.startsWith('91')) phone = clean.slice(2);
-
-            if (phone) {
+            phone = sanitizePhone(input);
+            if (phone.length === 10) {
                 db.c[name].phone = phone;
                 saveL();
             }
@@ -761,10 +889,6 @@ function toggleH(e, name) {
     el.style.display = 'block';
 }
 
-function shareLedger(name) {
-    copyStatementOnly(null, name);
-}
-
 function drawSharedLog() {
     const list = document.getElementById('sharedLogList');
     list.innerHTML = Object.keys(db.c).sort().map(n => {
@@ -789,30 +913,75 @@ function markAllAsShared() {
     saveL(); drawSharedLog(); syncOutbox(); msg(`Marked ${updatedCount} clients`);
 }
 
+/* Client Registry & Profile Editing (Name, City, Phone) */
 function drawClientRegistry() {
     const r = document.getElementById('clientRegistry');
     r.innerHTML = Object.keys(db.c).sort().map(n => {
         const phone = getCustPhone(n);
         const phoneTxt = phone ? ` • 📞 ${phone}` : '';
-        return `<div class="row-item" onclick="editClientName('${n.replace(/'/g,"\\'")}')"><div><b style="font-size:13px">${n}</b><br><small style="color:var(--mut); font-size:10px">${db.c[n].city}${phoneTxt}</small></div><span style="font-size:11px; color:var(--acc); font-weight:800">EDIT</span></div>`;
+        return `<div class="row-item" onclick="openClientEditModal('${n.replace(/'/g,"\\'")}')">
+            <div>
+                <b style="font-size:13px">${n}</b><br>
+                <small style="color:var(--mut); font-size:10px">${db.c[n].city || 'Local'}${phoneTxt}</small>
+            </div>
+            <span style="font-size:11px; color:var(--acc); font-weight:800">EDIT</span>
+        </div>`;
     }).join('');
 }
 
-function editClientName(old) {
-    const n = prompt("Change name for " + old, old);
-    if (n && n !== old && !db.c[n]) {
-        db.c[n] = db.c[old]; delete db.c[old];
-        db.t.forEach(t => { if(t.name.toLowerCase() === old.toLowerCase()) t.name = n; });
-        db.o.push({ action: 'editClient', oldName: old, newName: n });
-        saveL(); drawClientRegistry(); syncOutbox();
+function openClientEditModal(name) {
+    const c = db.c[name] || {};
+    document.getElementById('editClientOldName').value = name;
+    document.getElementById('editClientName').value = name;
+    document.getElementById('editClientCity').value = c.city || '';
+    document.getElementById('editClientPhone').value = getCustPhone(name);
+    document.getElementById('modal-edit-client').style.display = 'flex';
+}
+
+function saveClientProfile() {
+    const oldName = document.getElementById('editClientOldName').value.trim();
+    const newName = document.getElementById('editClientName').value.trim();
+    const newCity = document.getElementById('editClientCity').value.trim() || 'Local';
+    const newPhone = sanitizePhone(document.getElementById('editClientPhone').value.trim());
+
+    if (!newName) return msg("Client name cannot be blank");
+    if (newName !== oldName && db.c[newName]) return msg("Customer name already exists");
+
+    const clientObj = db.c[oldName] || { joined: getD(), lastShared: 'Never' };
+    clientObj.city = newCity;
+    clientObj.phone = newPhone;
+    clientObj.mobile = newPhone;
+
+    if (newName !== oldName) {
+        db.c[newName] = clientObj;
+        delete db.c[oldName];
+        db.t.forEach(t => {
+            if (t.name.toLowerCase() === oldName.toLowerCase()) {
+                t.name = newName;
+            }
+        });
+        db.o.push({ action: 'editClient', oldName, newName, city: newCity, phone: newPhone });
+    } else {
+        db.c[oldName] = clientObj;
+        db.o.push({ action: 'editClient', oldName, newName: oldName, city: newCity, phone: newPhone });
     }
+
+    saveL();
+    closeModal('modal-edit-client');
+    drawClientRegistry();
+    drawR();
+    updateS();
+    syncOutbox();
+    msg("Client details updated!");
 }
 
 async function handleNewClient() {
-    const n = document.getElementById('newCustName').value.trim(), c = document.getElementById('newCustCity').value.trim() || "Local";
-    const p = (document.getElementById('newCustPhone') ? document.getElementById('newCustPhone').value.trim() : '');
+    const n = document.getElementById('newCustName').value.trim();
+    const c = document.getElementById('newCustCity').value.trim() || "Local";
+    const p = sanitizePhone(document.getElementById('newCustPhone') ? document.getElementById('newCustPhone').value.trim() : '');
+
     if(!n || db.c[n]) return msg("Enter Unique Name");
-    db.c[n] = { joined: getD(), city: c, phone: p, lastShared: 'Never' };
+    db.c[n] = { joined: getD(), city: c, phone: p, mobile: p, lastShared: 'Never' };
     db.o.push({ action: 'addTxn', txn: { id: Date.now(), name: n, amount: 0, date: getD(), type: 'join', remarks: '' }, customer: { name: n, city: c, phone: p, lastShared: 'Never' } });
     saveL(); 
     document.getElementById('newCustName').value=''; 
@@ -828,6 +997,279 @@ function updateS() {
         if(b > 0) due += b;
     });
     document.getElementById('header-total').innerText = shopFmt(Math.round(due / 100000)) + " L";
+}
+
+/* ==========================================================================
+   58mm BLUETOOTH THERMAL PRINTER & ESC/POS FORMATTER
+   ========================================================================== */
+
+function padLine32(leftStr, rightStr, maxLen = 32) {
+    const left = String(leftStr || '');
+    const right = String(rightStr || '');
+    if (left.length + right.length >= maxLen) {
+        const truncatedLeft = left.substring(0, maxLen - right.length - 1);
+        return truncatedLeft + ' ' + right;
+    }
+    const spaces = maxLen - left.length - right.length;
+    return left + ' '.repeat(spaces) + right;
+}
+
+async function connectBluetoothPrinter() {
+    if (!navigator.bluetooth) {
+        msg("Web Bluetooth requires Chrome on Android or Desktop");
+        return false;
+    }
+    try {
+        const btnLabel = document.getElementById('btStatusLabel');
+        const btn = document.getElementById('btStatusBtn');
+        btnLabel.innerText = "SEARCHING...";
+
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb', // Common ESC/POS service
+                '0000e0ff-0000-1000-8000-00805f9b34fb',
+                '0000fff0-0000-1000-8000-00805f9b34fb',
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2'
+            ]
+        });
+
+        const server = await device.gatt.connect();
+        const services = await server.getPrimaryServices();
+
+        bluetoothCharacteristic = null;
+        for (const s of services) {
+            try {
+                const chars = await s.getCharacteristics();
+                for (const ch of chars) {
+                    if (ch.properties.write || ch.properties.writeWithoutResponse) {
+                        bluetoothCharacteristic = ch;
+                        break;
+                    }
+                }
+            } catch (e) {}
+            if (bluetoothCharacteristic) break;
+        }
+
+        if (bluetoothCharacteristic) {
+            bluetoothDevice = device;
+            btn.classList.add('connected');
+            btnLabel.innerText = "CONNECTED";
+            msg("Printer Connected: " + (device.name || "58mm Printer"));
+            return true;
+        } else {
+            btnLabel.innerText = "PAIR BT";
+            msg("Connected, but no writable ESC/POS channel found.");
+            return false;
+        }
+    } catch (err) {
+        document.getElementById('btStatusLabel').innerText = "PAIR BT";
+        if (err.name !== 'NotFoundError') {
+            msg("Bluetooth Error: " + err.message);
+        }
+        return false;
+    }
+}
+
+/* Send ESC/POS payload in small 50-byte chunks */
+async function sendRawEscPos(buffer) {
+    if (!bluetoothCharacteristic) return false;
+    const chunkSize = 50;
+    for (let i = 0; i < buffer.length; i += chunkSize) {
+        const chunk = buffer.slice(i, i + chunkSize);
+        if (bluetoothCharacteristic.writeValueWithoutResponse) {
+            await bluetoothCharacteristic.writeValueWithoutResponse(chunk);
+        } else {
+            await bluetoothCharacteristic.writeValue(chunk);
+        }
+        await new Promise(r => setTimeout(r, 20));
+    }
+    return true;
+}
+
+async function printDayLedger58mm() {
+    const selectedDate = currentHomeDate || getD();
+    const dayTxns = db.t.filter(t => t.date === selectedDate && t.type !== 'join');
+
+    if (dayTxns.length === 0) {
+        return msg("No transactions recorded for " + selectedDate);
+    }
+
+    const sales = dayTxns.filter(t => t.type === 'bill');
+    const pays = dayTxns.filter(t => t.type === 'pay');
+
+    let totalSale = 0;
+    sales.forEach(s => totalSale += (Number(s.amount) || 0));
+
+    let totalPay = 0;
+    pays.forEach(p => totalPay += (Number(p.amount) || 0));
+
+    const dateFormatted = selectedDate.split('-').reverse().join('/');
+
+    // If Bluetooth is connected, generate ESC/POS command stream
+    if (bluetoothCharacteristic) {
+        try {
+            msg("Sending to 58mm printer...");
+            const esc = [];
+            const textEncoder = new TextEncoder();
+            const append = (str) => {
+                const bytes = textEncoder.encode(str);
+                for (let b of bytes) esc.push(b);
+            };
+
+            // Init printer
+            esc.push(0x1B, 0x40);
+
+            // Center Align Header
+            esc.push(0x1B, 0x61, 0x01);
+            // Double height & bold header
+            esc.push(0x1B, 0x21, 0x30);
+            append("LEDGER PRO\n");
+            esc.push(0x1B, 0x21, 0x00); // Normal size
+            append("DATE: " + dateFormatted + "\n");
+            append("--------------------------------\n");
+
+            // Left Align
+            esc.push(0x1B, 0x61, 0x00);
+
+            // 1. FIRST PRINT SALE IN BOLD FULL LENGTH
+            esc.push(0x1B, 0x45, 0x01); // Bold ON
+            append("=== SALES / BILLS (+) ===\n");
+            esc.push(0x1B, 0x45, 0x00); // Bold OFF
+
+            if (sales.length === 0) {
+                append("No Sales\n");
+            } else {
+                sales.forEach(s => {
+                    const phone = getCustPhone(s.name);
+                    const amtStr = fmt(s.amount);
+                    append(padLine32(s.name.toUpperCase(), amtStr) + "\n");
+                    if (phone || s.remarks) {
+                        const note = (phone ? "Ph:" + phone + " " : "") + (s.remarks || "");
+                        append("  " + note.substring(0, 30) + "\n");
+                    }
+                });
+            }
+
+            // Bold Sale Subtotal
+            esc.push(0x1B, 0x45, 0x01);
+            append("--------------------------------\n");
+            append(padLine32("TOTAL SALE DONE:", fmt(totalSale)) + "\n");
+            append("--------------------------------\n\n");
+            esc.push(0x1B, 0x45, 0x00);
+
+            // 2. PAYMENT ONE ALSO (CUSTOMER DETAILS & AMOUNT)
+            esc.push(0x1B, 0x45, 0x01); // Bold ON
+            append("=== CASH / PAYMENTS (-) ===\n");
+            esc.push(0x1B, 0x45, 0x00); // Bold OFF
+
+            if (pays.length === 0) {
+                append("No Payments\n");
+            } else {
+                pays.forEach(p => {
+                    const phone = getCustPhone(p.name);
+                    const amtStr = fmt(p.amount);
+                    append(padLine32(p.name.toUpperCase(), amtStr) + "\n");
+                    if (phone || p.remarks) {
+                        const note = (phone ? "Ph:" + phone + " " : "") + (p.remarks || "");
+                        append("  " + note.substring(0, 30) + "\n");
+                    }
+                });
+            }
+
+            // Bold Payment Subtotal
+            esc.push(0x1B, 0x45, 0x01);
+            append("--------------------------------\n");
+            append(padLine32("TOTAL PAYMENT RECV:", fmt(totalPay)) + "\n");
+            append("================================\n");
+
+            // Final Summary
+            append(padLine32("NET BALANCE:", fmt(totalSale - totalPay)) + "\n");
+            append("================================\n\n\n\n");
+            esc.push(0x1B, 0x45, 0x00);
+
+            // Cut feed
+            esc.push(0x1D, 0x56, 0x41, 0x10);
+
+            await sendRawEscPos(new Uint8Array(esc));
+            msg("Printed successfully!");
+            return;
+        } catch (e) {
+            console.error(e);
+            msg("Printer error. Falling back to print view...");
+        }
+    }
+
+    // Fallback: System Print formatted strictly for 58mm roll
+    let receiptHtml = `
+        <div style="text-align:center; font-weight:900; font-size:16px;">LEDGER PRO</div>
+        <div style="text-align:center; font-size:12px;">DATE: ${dateFormatted}</div>
+        <div style="border-top:1px dashed #000; margin:6px 0;"></div>
+        
+        <div style="font-weight:900; font-size:13px; margin: 4px 0;">=== SALES / BILLS (+) ===</div>
+    `;
+
+    if (sales.length === 0) {
+        receiptHtml += `<div>No Sales</div>`;
+    } else {
+        sales.forEach(s => {
+            const phone = getCustPhone(s.name);
+            receiptHtml += `
+                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                    <span>${s.name.toUpperCase()}</span>
+                    <span>${fmt(s.amount)}</span>
+                </div>
+                ${(phone || s.remarks) ? `<div style="font-size:10px; color:#444; margin-bottom:2px;">${phone ? 'Ph:'+phone+' ' : ''}${s.remarks||''}</div>` : ''}
+            `;
+        });
+    }
+
+    receiptHtml += `
+        <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:12px;">
+            <span>TOTAL SALE DONE:</span>
+            <span>${fmt(totalSale)}</span>
+        </div>
+        <div style="border-top:1px dashed #000; margin:6px 0;"></div>
+
+        <div style="font-weight:900; font-size:13px; margin: 4px 0;">=== CASH / PAYMENTS (-) ===</div>
+    `;
+
+    if (pays.length === 0) {
+        receiptHtml += `<div>No Payments</div>`;
+    } else {
+        pays.forEach(p => {
+            const phone = getCustPhone(p.name);
+            receiptHtml += `
+                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                    <span>${p.name.toUpperCase()}</span>
+                    <span>${fmt(p.amount)}</span>
+                </div>
+                ${(phone || p.remarks) ? `<div style="font-size:10px; color:#444; margin-bottom:2px;">${phone ? 'Ph:'+phone+' ' : ''}${p.remarks||''}</div>` : ''}
+            `;
+        });
+    }
+
+    receiptHtml += `
+        <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:12px;">
+            <span>TOTAL PAYMENT RECV:</span>
+            <span>${fmt(totalPay)}</span>
+        </div>
+        <div style="border-top:2px solid #000; margin:6px 0;"></div>
+        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:13px;">
+            <span>NET BALANCE:</span>
+            <span>${fmt(totalSale - totalPay)}</span>
+        </div>
+        <div style="margin-top:20px; text-align:center; font-size:10px;">--- END OF RECEIPT ---</div>
+    `;
+
+    const printContainer = document.getElementById('printable-receipt');
+    printContainer.innerHTML = receiptHtml;
+    printContainer.style.display = 'block';
+    window.print();
+    setTimeout(() => { printContainer.style.display = 'none'; }, 1000);
 }
 
 function generateReport(type) {
